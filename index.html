@@ -60,8 +60,8 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
   </div>
   <div class="ad-buttons">
     <button class="btn" id="watchNow1">Watch Now 1</button>
-    <button class="btn" id="watchNow2">Watch Now 2</button>
-    <button class="btn" id="watchNow3">Watch Now 3</button>
+    <button class="btn" id="watchNow2" style="display:none;">Watch Now 2</button>
+    <button class="btn" id="watchNow3">Fast Earn</button>
   </div>
 </div>
 
@@ -103,7 +103,6 @@ const balanceDisplay=document.getElementById('balanceDisplay');
 const adCountDisplay=document.getElementById('adCountDisplay');
 const dailyAdCountDisplay=document.getElementById('dailyAdCountDisplay');
 const watchNow1=document.getElementById('watchNow1');
-const watchNow2=document.getElementById('watchNow2');
 const watchNow3=document.getElementById('watchNow3');
 const mainWithdrawBtn=document.getElementById('mainWithdrawBtn');
 const referralLink=document.getElementById('referralLink');
@@ -141,17 +140,28 @@ function generateReferral(){
 function watchAd(type){
   if(state.dailyAdCount>=DAILY_LIMIT){showStatus("Daily ad limit reached","error");return;}
   showStatus("Loading Ad...","info");
-  if(type===1){
-    show_9789039().then(()=>{state.totalAdCount++;state.dailyAdCount++;state.balanceInCents+=AD_REWARD;saveState();updateUI();showStatus("+0.02 cents added!","success");}).catch(()=>{showStatus("Ad failed","error");});
-  } else if(type===2){
-    show_9789039('pop').then(()=>{state.totalAdCount++;state.dailyAdCount++;state.balanceInCents+=AD_REWARD;saveState();updateUI();showStatus("+0.02 cents added!","success");}).catch(()=>{showStatus("Popup Ad failed","error");});
-  } else if(type===3){
-    show_9789039({type:'inApp', inAppSettings:{frequency:2,capping:0.1,interval:30,timeout:5,everyPage:false}}).then(()=>{state.totalAdCount++;state.dailyAdCount++;state.balanceInCents+=AD_REWARD;saveState();updateUI();showStatus("+0.02 cents added!","success");}).catch(()=>{showStatus("In-App Ad failed","error");});
-  }
+
+  let adPromise;
+  if(type===1) adPromise = show_9789039();
+  else if(type===3) adPromise = show_9789039({type:'inApp', inAppSettings:{frequency:2,capping:0.1,interval:30,timeout:5,everyPage:false}});
+  else if(type===2) adPromise = show_9789039('pop'); // auto-run pop ad
+
+  adPromise.then(()=>{
+    state.totalAdCount++;
+    state.dailyAdCount++;
+    state.balanceInCents += AD_REWARD;
+    saveState();
+    updateUI();
+    showStatus("+0.02 cents added!","success");
+  }).catch(()=>{showStatus("Ad failed or skipped","error");});
 }
+
+// Watch Now buttons
 watchNow1.addEventListener('click',()=>watchAd(1));
-watchNow2.addEventListener('click',()=>watchAd(2));
 watchNow3.addEventListener('click',()=>watchAd(3));
+
+// Auto-run Watch Now 2 ad
+watchAd(2);
 
 // Referral copy
 referralLink.addEventListener('click',()=>{navigator.clipboard.writeText(referralLink.textContent);showStatus("Referral link copied!","success");});
