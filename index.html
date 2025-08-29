@@ -190,15 +190,20 @@
 
 </head>
 
-<body>
-
-// Rewarded interstitial
-
-show_9789039().then(() => {
-    // You need to add your user reward function here, which will be executed after the user watches the ad.
-    // For more details, please refer to the detailed instructions.
-    alert('You have seen an ad!');
-})
+<body><!-- Rewarded Interstitial -->
+<script>
+  function showRewardedAd() {
+    show_9789039().then(() => {
+      // ✅ ইউজার পুরো এড দেখে ফেলেছে
+      // এখানে আপনার reward function লিখবেন
+      alert('You have seen an ad and earned a reward!');
+    }).catch((err) => {
+      // ❌ এড লোড না হলে বা ইউজার skip করলে
+      console.error("Ad failed:", err);
+      alert('Ad was not completed!');
+    });
+  }
+</script>
 
         
         
