@@ -129,15 +129,30 @@ function showStatus(msg,type='info',dur=3000){statusMessage.textContent=msg;stat
 function updateUI(){balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;adCountDisplay.textContent=state.totalAdCount;dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;mainWithdrawBtn.disabled=(state.balanceInCents<WITHDRAW_THRESHOLD || !selectedPlatform);}
 function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
 
-// Watch Ads
-function watchAd(){
-  if(state.dailyAdCount>=DAILY_LIMIT){showStatus("Daily ad limit reached","error"); return;}
-  showStatus("Loading Ad...","info");
-  show_9789039().then((adResult)=>{
-    if(adResult.completed){
-      state.totalAdCount++; state.dailyAdCount++; state.balanceInCents+=AD_REWARD; saveState(); updateUI(); showStatus("+0.02 USD added!","success");
-    } else {showStatus("Ad not completed, no reward!","error");}
-  }).catch(()=>{showStatus("Ad failed","error");});
+// Watch Ads - Stronger Completion Check
+function watchAd() {
+    if (state.dailyAdCount >= DAILY_LIMIT) {
+        showStatus("Daily ad limit reached","error");
+        return;
+    }
+    showStatus("Loading Ad...","info");
+    show_9789039()
+    .then((adResult) => {
+        // শুধু পুরো দেখা হলে রিওয়ার্ড
+        if (adResult.completed === true && adResult.duration >= adResult.totalDuration) {
+            state.totalAdCount++;
+            state.dailyAdCount++;
+            state.balanceInCents += AD_REWARD;
+            saveState();
+            updateUI();
+            showStatus("+0.02 USD added!","success");
+        } else {
+            showStatus("Ad not completed, no reward!","error");
+        }
+    })
+    .catch(() => {
+        showStatus("Ad failed to load","error");
+    });
 }
 watchNow1.addEventListener('click', watchAd);
 
@@ -185,7 +200,7 @@ document.getElementById('navWithdraw').addEventListener('click',()=>{
   document.getElementById('navWithdraw').classList.add('active');
 });
 
-// Reset daily ads at midnight
+// Reset daily ads at midnight (only daily count)
 function scheduleMidnightReset(){
   const now=new Date(); const midnight=new Date(); midnight.setHours(24,0,0,0);
   const timeout=midnight.getTime()-now.getTime();
@@ -196,7 +211,6 @@ function scheduleMidnightReset(){
 }
 
 loadState(); generateReferral(); updateUI(); tg.ready(); tg.expand(); scheduleMidnightReset();
-});
 </script>
 </body>
 </html>
