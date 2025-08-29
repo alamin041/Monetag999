@@ -183,30 +183,20 @@ mainWithdrawBtn.addEventListener('click',()=>{
 });
 
 // Navigation
-document.getElementById('navHome').addEventListener('click',()=>{
-  document.getElementById('home-view').style.display='block';
-  document.getElementById('referral-view').style.display='none';
-  document.getElementById('withdraw-view').style.display='none';
-  document.getElementById('navHome').classList.add('active');
-  document.getElementById('navReferral').classList.remove('active');
-  document.getElementById('navWithdraw').classList.remove('active');
-});
-document.getElementById('navReferral').addEventListener('click',()=>{
-  document.getElementById('home-view').style.display='none';
-  document.getElementById('referral-view').style.display='block';
-  document.getElementById('withdraw-view').style.display='none';
-  document.getElementById('navHome').classList.remove('active');
-  document.getElementById('navReferral').classList.add('active');
-  document.getElementById('navWithdraw').classList.remove('active');
-});
-document.getElementById('navWithdraw').addEventListener('click',()=>{
-  document.getElementById('home-view').style.display='none';
-  document.getElementById('referral-view').style.display='none';
-  document.getElementById('withdraw-view').style.display='block';
-  document.getElementById('navHome').classList.remove('active');
-  document.getElementById('navReferral').classList.remove('active');
-  document.getElementById('navWithdraw').classList.add('active');
-});
+function showView(viewId){
+  ['home-view','referral-view','withdraw-view'].forEach(v=>{
+    document.getElementById(v).style.display=(v===viewId)?'block':'none';
+  });
+  ['navHome','navReferral','navWithdraw'].forEach(b=>{
+    document.getElementById(b).classList.remove('active');
+  });
+  if(viewId==='home-view') document.getElementById('navHome').classList.add('active');
+  else if(viewId==='referral-view') document.getElementById('navReferral').classList.add('active');
+  else if(viewId==='withdraw-view') document.getElementById('navWithdraw').classList.add('active');
+}
+document.getElementById('navHome').addEventListener('click',()=>showView('home-view'));
+document.getElementById('navReferral').addEventListener('click',()=>showView('referral-view'));
+document.getElementById('navWithdraw').addEventListener('click',()=>showView('withdraw-view'));
 
 // Reset daily ads at midnight
 function scheduleMidnightReset(){
