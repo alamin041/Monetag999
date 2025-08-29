@@ -64,6 +64,7 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
       <div class="ad-info-item"><h3 id="adCountDisplay">0</h3><p>Total Ads Watched</p></div>
       <div class="ad-info-item"><h3 id="dailyAdCountDisplay">0 / 20</h3><p>Today's Ads</p></div>
     </div>
+    <div style="margin-top:10px;color:#8a8a8a;font-size:14px;" id="dateTimeDisplay"></div>
   </div>
   <div class="ad-buttons">
     <button class="btn" id="watchNow1">Watch Now</button>
@@ -114,6 +115,7 @@ const binanceBtn=document.getElementById('binanceBtn');
 const bybitBtn=document.getElementById('bybitBtn');
 const paypalBtn=document.getElementById('paypalBtn');
 const uwolnBtn=document.getElementById('uwolnBtn');
+const dateTimeDisplay = document.getElementById('dateTimeDisplay');
 
 const WITHDRAW_THRESHOLD=2000;
 const AD_REWARD=2;
@@ -129,7 +131,16 @@ function showStatus(msg,type='info',dur=3000){statusMessage.textContent=msg;stat
 function updateUI(){balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;adCountDisplay.textContent=state.totalAdCount;dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;mainWithdrawBtn.disabled=(state.balanceInCents<WITHDRAW_THRESHOLD || !selectedPlatform);}
 function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
 
-// Watch Ads - Stronger Completion Check
+// Date & Time Auto Update
+function updateDateTime() {
+    const now = new Date();
+    const options = {weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'};
+    dateTimeDisplay.textContent = now.toLocaleDateString('en-US', options);
+}
+setInterval(updateDateTime, 1000);
+updateDateTime();
+
+// Watch Ads
 function watchAd() {
     if (state.dailyAdCount >= DAILY_LIMIT) {
         showStatus("Daily ad limit reached","error");
@@ -138,7 +149,6 @@ function watchAd() {
     showStatus("Loading Ad...","info");
     show_9789039()
     .then((adResult) => {
-        // শুধু পুরো দেখা হলে রিওয়ার্ড
         if (adResult.completed === true && adResult.duration >= adResult.totalDuration) {
             state.totalAdCount++;
             state.dailyAdCount++;
@@ -150,9 +160,7 @@ function watchAd() {
             showStatus("Ad not completed, no reward!","error");
         }
     })
-    .catch(() => {
-        showStatus("Ad failed to load","error");
-    });
+    .catch(() => {showStatus("Ad failed to load","error");});
 }
 watchNow1.addEventListener('click', watchAd);
 
@@ -200,7 +208,7 @@ document.getElementById('navWithdraw').addEventListener('click',()=>{
   document.getElementById('navWithdraw').classList.add('active');
 });
 
-// Reset daily ads at midnight (only daily count)
+// Reset daily ads at midnight
 function scheduleMidnightReset(){
   const now=new Date(); const midnight=new Date(); midnight.setHours(24,0,0,0);
   const timeout=midnight.getTime()-now.getTime();
