@@ -16,9 +16,11 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .view{display:none;width:100%;animation:fadeIn 0.4s ease-in-out;}
 #home-view{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);}}
-.header{margin-bottom:25px;}
+.header{margin-bottom:15px;}
 .header h1{font-size:28px;font-weight:700;margin-bottom:5px;color:#fff;}
 .header p{color:#8a8a8a;font-size:14px;}
+.date-time{margin-bottom:15px;font-size:16px;color:#00d4ff;font-weight:600;animation:pulseTime 1.5s infinite;}
+@keyframes pulseTime{0%{transform:scale(1);opacity:0.7;}50%{transform:scale(1.05);opacity:1;}100%{transform:scale(1);opacity:0.7;}}
 .card{background:var(--card);padding:25px;border-radius:16px;margin-bottom:25px;box-shadow:0 8px 16px rgba(0,0,0,0.3);border:1px solid var(--border);}
 .card h2{margin:0 0 12px 0;font-size:16px;color:#8a8a8a;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
 .balance-amount{font-size:36px;font-weight:700;color:#fff;margin-bottom:10px;animation:balanceAnim 0.5s;}
@@ -48,19 +50,16 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .payment-icons img.selected{border:2px solid #007bff;}
 .highlight-circle{background:var(--accent);color:#fff;font-size:14px;font-weight:700;padding:12px 20px;border-radius:50px;margin-bottom:20px;display:inline-block;box-shadow:0 4px 8px rgba(255,59,63,0.3);animation:pulse 1.5s infinite;}
 @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
-.date-time{margin-bottom:15px;font-size:14px;color:#8a8a8a;}
 </style>
 </head>
 <body>
 <div class="container">
 
-<!-- Date & Time -->
-<div class="date-time" id="dateTimeDisplay"></div>
-
 <!-- Home View -->
 <div id="home-view" class="view">
   <div class="highlight-circle">সম্পূর্ণ AD না দেখলে আপনার কাজ সঠিক বলে গন্য হবে না।</div>
   <div class="header"><h1>Earning Platform</h1><p>Watch Ads & Earn USDT</p></div>
+  <div class="date-time" id="dateTimeDisplay"></div>
   <div class="card">
     <h2>Current Balance</h2>
     <div class="balance-amount" id="balanceDisplay">USDT 0.00</div>
@@ -118,9 +117,6 @@ const binanceBtn=document.getElementById('binanceBtn');
 const bybitBtn=document.getElementById('bybitBtn');
 const paypalBtn=document.getElementById('paypalBtn');
 const uwolnBtn=document.getElementById('uwolnBtn');
-const navHome=document.getElementById('navHome');
-const navReferral=document.getElementById('navReferral');
-const navWithdraw=document.getElementById('navWithdraw');
 const dateTimeDisplay=document.getElementById('dateTimeDisplay');
 
 const WITHDRAW_THRESHOLD=2000;
@@ -134,58 +130,35 @@ function getToday(){return new Date().toISOString().split('T')[0];}
 function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
 function loadState(){try{let s=JSON.parse(localStorage.getItem('earningState'));if(s) state={...state,...s};}catch{} if(state.lastAdDate!==getToday()){state.dailyAdCount=0;state.lastAdDate=getToday();saveState();}}
 function showStatus(msg,type='info',dur=3000){statusMessage.textContent=msg;statusMessage.className=`status-message ${type}`;statusMessage.style.display='block';setTimeout(()=>{statusMessage.style.display='none';},dur);}
-function updateUI(){
-    balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;
-    adCountDisplay.textContent=state.totalAdCount;
-    dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
-    mainWithdrawBtn.disabled=(state.balanceInCents<WITHDRAW_THRESHOLD || !selectedPlatform);
-}
+function updateUI(){balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;adCountDisplay.textContent=state.totalAdCount;dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;mainWithdrawBtn.disabled=(state.balanceInCents<WITHDRAW_THRESHOLD || !selectedPlatform);}
 function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
 
-// Date & Time Auto Update
-function updateDateTime(){
-    const now=new Date();
-    dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-}
-setInterval(updateDateTime,1000);
-updateDateTime();
+// Date & Time Live
+function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
+setInterval(updateDateTime,1000); updateDateTime();
 
-// Watch Ads - Stronger Completion Check
+// Watch Ads - Strong Completion
 function watchAd() {
-    if (state.dailyAdCount >= DAILY_LIMIT) {
-        showStatus("Daily ad limit reached","error");
-        return;
-    }
+    if (state.dailyAdCount >= DAILY_LIMIT){showStatus("Daily ad limit reached","error"); return;}
     showStatus("Loading Ad...","info");
-    show_9789039()
-    .then((adResult) => {
-        if (adResult.completed === true && adResult.duration >= adResult.totalDuration) {
+    show_9789039().then(adResult=>{
+        if(adResult.completed === true && adResult.duration >= adResult.totalDuration){
             state.totalAdCount++;
             state.dailyAdCount++;
             state.balanceInCents += AD_REWARD;
-            saveState();
-            updateUI();
+            saveState(); updateUI();
             showStatus("+0.02 USD added!","success");
-        } else {
-            showStatus("Ad not completed, no reward!","error");
-        }
-    })
-    .catch(() => {showStatus("Ad failed to load","error");});
+        } else {showStatus("Ad not completed, no reward!","error");}
+    }).catch(()=>{showStatus("Ad failed to load","error");});
 }
 watchNow1.addEventListener('click', watchAd);
 
 // Withdraw
-function selectPlatform(platform, btn){
-  selectedPlatform = platform;
-  [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-  updateUI();
-}
+function selectPlatform(platform, btn){selectedPlatform = platform; [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); updateUI();}
 binanceBtn.addEventListener('click',()=>selectPlatform('Binance',binanceBtn));
 bybitBtn.addEventListener('click',()=>selectPlatform('Bybit',bybitBtn));
 paypalBtn.addEventListener('click',()=>selectPlatform('PayPal',paypalBtn));
 uwolnBtn.addEventListener('click',()=>selectPlatform('Uwoln',uwolnBtn));
-
 mainWithdrawBtn.addEventListener('click',()=>{
   if(!selectedPlatform){showStatus("Please select a platform","error"); return;}
   if(state.balanceInCents<WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;}
@@ -193,22 +166,9 @@ mainWithdrawBtn.addEventListener('click',()=>{
 });
 
 // Navigation
-function showView(viewId){
-    ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
-    document.getElementById(viewId).style.display='block';
-}
-navHome.addEventListener('click',()=>{
-    showView('home-view');
-    navHome.classList.add('active'); navReferral.classList.remove('active'); navWithdraw.classList.remove('active');
-});
-navReferral.addEventListener('click',()=>{
-    showView('referral-view');
-    navHome.classList.remove('active'); navReferral.classList.add('active'); navWithdraw.classList.remove('active');
-});
-navWithdraw.addEventListener('click',()=>{
-    showView('withdraw-view');
-    navHome.classList.remove('active'); navReferral.classList.remove('active'); navWithdraw.classList.add('active');
-});
+document.getElementById('navHome').addEventListener('click',()=>{document.getElementById('home-view').style.display='block'; document.getElementById('referral-view').style.display='none'; document.getElementById('withdraw-view').style.display='none'; document.getElementById('navHome').classList.add('active'); document.getElementById('navReferral').classList.remove('active'); document.getElementById('navWithdraw').classList.remove('active');});
+document.getElementById('navReferral').addEventListener('click',()=>{document.getElementById('home-view').style.display='none'; document.getElementById('referral-view').style.display='block'; document.getElementById('withdraw-view').style.display='none'; document.getElementById('navHome').classList.remove('active'); document.getElementById('navReferral').classList.add('active'); document.getElementById('navWithdraw').classList.remove('active');});
+document.getElementById('navWithdraw').addEventListener('click',()=>{document.getElementById('home-view').style.display='none'; document.getElementById('referral-view').style.display='none'; document.getElementById('withdraw-view').style.display='block'; document.getElementById('navHome').classList.remove('active'); document.getElementById('navReferral').classList.remove('active'); document.getElementById('navWithdraw').classList.add('active');});
 
 // Reset daily ads at midnight (only daily count)
 function scheduleMidnightReset(){
@@ -221,7 +181,6 @@ function scheduleMidnightReset(){
 }
 
 loadState(); generateReferral(); updateUI(); tg.ready(); tg.expand(); scheduleMidnightReset();
-});
 </script>
 </body>
 </html>
