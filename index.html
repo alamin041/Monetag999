@@ -7,23 +7,40 @@
 <script src="//libtl.com/sdk.js" data-zone="9789039" data-sdk="show_9789039"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-:root{--bg:#121212;--text:#e0e0e0;--btn:#007bff;--btnText:#fff;--card:#1e1e1e;--border:#333;--success:#28a745;--danger:#dc3545;}
-body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;min-height:100vh;text-align:center;}
+:root{
+  --bg:#121212;
+  --text:#e0e0e0;
+  --btn:#007bff;
+  --btnText:#fff;
+  --card:#1e1e1e;
+  --border:#333;
+  --success:#28a745;
+  --danger:#dc3545;
+}
+body{
+  font-family:Arial,sans-serif;
+  margin:0; padding:20px 15px 90px 15px;
+  background:var(--bg); color:var(--text);
+  display:flex; flex-direction:column; align-items:center;
+  min-height:100vh; text-align:center;
+}
 .container{width:100%; max-width:500px;}
-.view{display:none;width:100%;animation:fadeIn 0.3s ease-in-out;}
+.view{display:none;width:100%; animation:fadeIn 0.3s ease-in-out;}
 #home-view{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
 .header{margin-bottom:25px;}
 .header h1{font-size:32px;font-weight:700;margin-bottom:5px;color:#fff;}
 .header p{color:#8a8a8a;font-size:16px;}
 .card{background:var(--card);padding:25px;border-radius:16px;margin-bottom:25px;box-shadow:0 8px 16px rgba(0,0,0,0.2);border:1px solid var(--border);}
 .card h2{margin:0 0 12px 0;font-size:16px;color:#8a8a8a;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
 .balance-amount{font-size:42px;font-weight:700;color:#fff;margin-bottom:10px;}
-.ad-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;text-align:center;}
+.ad-info-grid{display:grid; grid-template-columns:1fr 1fr; gap:15px;text-align:center;}
 .ad-info-item h3{font-size:20px;font-weight:600;margin:0 0 5px 0;color:#fff;}
 .ad-info-item p{font-size:14px;color:#8a8a8a;margin:0;}
 .ad-buttons{display:flex;flex-direction:column;gap:15px;margin-bottom:25px;}
-.btn{width:100%;padding:16px;font-size:18px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;background:linear-gradient(145deg,var(--btn),#0056b3);color:var(--btnText);box-shadow:0 4px 10px rgba(0,123,255,0.2);}
+.btn{width:100%;padding:16px;font-size:18px;font-weight:600;border:none;border-radius:12px;cursor:pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  background:linear-gradient(145deg,var(--btn),#0056b3);color:var(--btnText);box-shadow:0 4px 10px rgba(0,123,255,0.2);}
 .btn:hover{transform:translateY(-2px);box-shadow:0 6px 15px rgba(0,123,255,0.3);}
 .btn:active{transform:scale(0.98);}
 .btn:disabled{background:#555;color:#888;cursor:not-allowed;box-shadow:none;transform:none;}
@@ -42,6 +59,17 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .payment-icons img{width:50px;height:50px; cursor:pointer; border-radius:8px; transition: transform 0.2s, box-shadow 0.2s;}
 .payment-icons img:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.4);}
 .payment-icons img.selected{border:2px solid #007bff;}
+.highlight-circle{
+  background:#ff3b3f;
+  color:#fff;
+  font-size:16px;
+  font-weight:700;
+  padding:12px 20px;
+  border-radius:50px;
+  margin-bottom:20px;
+  display:inline-block;
+  box-shadow:0 4px 8px rgba(255,59,63,0.3);
+}
 </style>
 </head>
 <body>
@@ -49,6 +77,11 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 
 <!-- Home View -->
 <div id="home-view" class="view">
+  <!-- Highlight Circle Message -->
+  <div class="highlight-circle">
+    সম্পূর্ণ AD না দেখলে আপনার কাজ সঠিক বলে গণ্য হবে না।
+  </div>
+
   <div class="header"><h1>Earning Platform</h1><p>Watch Ads & Earn USDT</p></div>
   <div class="card">
     <h2>Current Balance</h2>
@@ -60,8 +93,8 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
   </div>
   <div class="ad-buttons">
     <button class="btn" id="watchNow1">Watch Now 1</button>
-    <button class="btn" id="watchNow2" style="display:none;">Watch Now 2</button>
-    <button class="btn" id="watchNow3">Fast Earn</button>
+    <button class="btn" id="watchNow2">Watch Now 2</button>
+    <button class="btn" id="fastEarnBtn">Fast Earn</button>
   </div>
 </div>
 
@@ -77,9 +110,9 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
   <h1>Withdraw</h1>
   <p>Choose account to withdraw (Min 20 USD):</p>
   <div class="payment-icons">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Binance_Logo.png" alt="Binance" id="binanceBtn">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/Bybit_logo.png" alt="Bybit" id="bybitBtn">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" id="paypalBtn">
+    <img src="https://cryptologos.cc/logos/binance-coin-bnb-logo.png" alt="Binance" id="binanceBtn">
+    <img src="https://cryptologos.cc/logos/bybit-byt-logo.png" alt="Bybit" id="bybitBtn">
+    <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal" id="paypalBtn">
   </div>
   <div class="ad-buttons">
     <button class="btn" id="mainWithdrawBtn" disabled>Withdraw</button>
@@ -103,7 +136,8 @@ const balanceDisplay=document.getElementById('balanceDisplay');
 const adCountDisplay=document.getElementById('adCountDisplay');
 const dailyAdCountDisplay=document.getElementById('dailyAdCountDisplay');
 const watchNow1=document.getElementById('watchNow1');
-const watchNow3=document.getElementById('watchNow3');
+const watchNow2=document.getElementById('watchNow2');
+const fastEarnBtn=document.getElementById('fastEarnBtn');
 const mainWithdrawBtn=document.getElementById('mainWithdrawBtn');
 const referralLink=document.getElementById('referralLink');
 const statusMessage=document.getElementById('statusMessage');
@@ -140,28 +174,20 @@ function generateReferral(){
 function watchAd(type){
   if(state.dailyAdCount>=DAILY_LIMIT){showStatus("Daily ad limit reached","error");return;}
   showStatus("Loading Ad...","info");
-
-  let adPromise;
-  if(type===1) adPromise = show_9789039();
-  else if(type===3) adPromise = show_9789039({type:'inApp', inAppSettings:{frequency:2,capping:0.1,interval:30,timeout:5,everyPage:false}});
-  else if(type===2) adPromise = show_9789039('pop'); // auto-run pop ad
-
-  adPromise.then(()=>{
-    state.totalAdCount++;
-    state.dailyAdCount++;
-    state.balanceInCents += AD_REWARD;
-    saveState();
-    updateUI();
-    showStatus("+0.02 cents added!","success");
-  }).catch(()=>{showStatus("Ad failed or skipped","error");});
+  if(type===1){
+    show_9789039().then(()=>{state.totalAdCount++;state.dailyAdCount++;state.balanceInCents+=AD_REWARD;saveState();updateUI();showStatus("+0.02 cents added!","success");}).catch(()=>{showStatus("Ad failed","error");});
+  } else if(type===2){
+    // Watch Now 2: run ad in background, no count increase
+    show_9789039('pop').catch(()=>{showStatus("Popup Ad failed","error");});
+  } else if(type===3){
+    show_9789039({type:'inApp', inAppSettings:{frequency:2,capping:0.1,interval:30,timeout:5,everyPage:false}})
+      .then(()=>{state.totalAdCount++;state.dailyAdCount++;state.balanceInCents+=AD_REWARD;saveState();updateUI();showStatus("+0.02 cents added!","success");})
+      .catch(()=>{showStatus("Fast Earn Ad failed","error");});
+  }
 }
-
-// Watch Now buttons
 watchNow1.addEventListener('click',()=>watchAd(1));
-watchNow3.addEventListener('click',()=>watchAd(3));
-
-// Auto-run Watch Now 2 ad
-watchAd(2);
+watchNow2.addEventListener('click',()=>watchAd(2));
+fastEarnBtn.addEventListener('click',()=>watchAd(3));
 
 // Referral copy
 referralLink.addEventListener('click',()=>{navigator.clipboard.writeText(referralLink.textContent);showStatus("Referral link copied!","success");});
