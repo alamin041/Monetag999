@@ -11,7 +11,6 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
-  /* --- Your original CSS remains intact --- */
   :root {
     --tg-theme-bg-color: #121212; --tg-theme-text-color: #e0e0e0; --tg-theme-button-color: #007bff;
     --tg-theme-button-text-color: #ffffff; --tg-theme-hint-color: #8a8a8a; --success-color: #28a745;
@@ -71,14 +70,14 @@
       <div class="balance-amount" id="balanceDisplay">USDT 0.00</div>
       <div class="ad-info-grid">
         <div class="ad-info-item"><h3 id="adCountDisplay">0</h3><p>Total Ads Watched</p></div>
-        <div class="ad-info-item"><h3 id="dailyAdCountDisplay">0 / 1000</h3><p>Today's Ads</p></div>
+        <div class="ad-info-item"><h3 id="dailyAdCountDisplay">0 / 20</h3><p>Today's Ads</p></div>
       </div>
     </div>
 
     <div class="ad-buttons">
-      <button class="btn" id="rewardedBtn">Watch Ad (+0.01 USDT)</button>
-      <button class="btn" id="popupBtn">Watch Rewarded Popup</button>
-      <button class="btn" id="inAppBtn">Show In-App Interstitial</button>
+      <button class="btn" id="rewardedBtn">Watch Rewarded Interstitial (+0.02 USDT)</button>
+      <button class="btn" id="popupBtn">Watch Rewarded Popup (+0.02 USDT)</button>
+      <button class="btn" id="inAppBtn">Show In-App Interstitial (+0.02 USDT)</button>
     </div>
 
     <button class="btn" id="mainWithdrawBtn" disabled>Reach 10.00 USDT to Withdraw</button>
@@ -105,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const statusMessage = document.getElementById('statusMessage');
 
   const WITHDRAW_THRESHOLD = 10;
-  const AD_REWARD_CENTS = 1;
+  const AD_REWARD_CENTS = 2; // এখন 0.02 USDT
   const DAILY_AD_LIMIT = 20;
 
   let state = { balanceInCents:0, totalAdCount:0, dailyAdCount:0, lastAdDate:null };
@@ -128,23 +127,34 @@ document.addEventListener('DOMContentLoaded', function() {
   loadState();
   updateUI();
 
+  function canWatchAd(){ return state.dailyAdCount < DAILY_AD_LIMIT; }
+
   // --- Rewarded Interstitial ---
   function showRewardedAd(){
-    show_9789039().then(()=>{ state.totalAdCount++; state.dailyAdCount++; state.balanceInCents+=AD_REWARD_CENTS; saveState(); updateUI(); showStatus('Rewarded Interstitial: +0.01 USDT','success'); })
-    .catch(e=>{ console.error(e); showStatus('Ad failed','error'); });
+    if(!canWatchAd()){ return showStatus('Daily ad limit reached', 'warning'); }
+    show_9789039().then(()=>{
+      state.totalAdCount++; state.dailyAdCount++; state.balanceInCents+=AD_REWARD_CENTS; saveState(); updateUI(); 
+      showStatus('Rewarded Interstitial: +0.02 USDT','success');
+    }).catch(e=>{ console.error(e); showStatus('Ad failed','error'); });
   }
 
   // --- Rewarded Popup ---
   function showRewardedPopup(){
-    show_9789039('pop').then(()=>{ state.totalAdCount++; state.dailyAdCount++; state.balanceInCents+=AD_REWARD_CENTS; saveState(); updateUI(); showStatus('Rewarded Popup: +0.01 USDT','success'); })
-    .catch(e=>{ console.error(e); showStatus('Popup Ad failed','error'); });
+    if(!canWatchAd()){ return showStatus('Daily ad limit reached', 'warning'); }
+    show_9789039('pop').then(()=>{
+      state.totalAdCount++; state.dailyAdCount++; state.balanceInCents+=AD_REWARD_CENTS; saveState(); updateUI(); 
+      showStatus('Rewarded Popup: +0.02 USDT','success');
+    }).catch(e=>{ console.error(e); showStatus('Popup Ad failed','error'); });
   }
 
   // --- In-App Interstitial ---
   function showInAppInterstitial(){
+    if(!canWatchAd()){ return showStatus('Daily ad limit reached', 'warning'); }
     show_9789039({ type:'inApp', inAppSettings:{ frequency:2, capping:0.1, interval:30, timeout:5, everyPage:false }})
-    .then(()=>{ state.totalAdCount++; state.dailyAdCount++; state.balanceInCents+=AD_REWARD_CENTS; saveState(); updateUI(); showStatus('In-App Interstitial: +0.01 USDT','success'); })
-    .catch(e=>{ console.error(e); showStatus('In-App Ad failed','error'); });
+    .then(()=>{
+      state.totalAdCount++; state.dailyAdCount++; state.balanceInCents+=AD_REWARD_CENTS; saveState(); updateUI(); 
+      showStatus('In-App Interstitial: +0.02 USDT','success');
+    }).catch(e=>{ console.error(e); showStatus('In-App Ad failed','error'); });
   }
 
   rewardedBtn.addEventListener('click', showRewardedAd);
