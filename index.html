@@ -39,7 +39,8 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .nav-btn:hover:not(.active){color:#fff;}
 .nav-btn .icon{width:28px;height:28px;margin-bottom:4px;}
 .payment-icons{display:flex; justify-content:space-around; margin-top:10px;}
-.payment-icons img{width:40px;height:40px; cursor:pointer; border-radius:8px;}
+.payment-icons img{width:50px;height:50px; cursor:pointer; border-radius:8px; transition: transform 0.2s, box-shadow 0.2s;}
+.payment-icons img:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.4);}
 .payment-icons img.selected{border:2px solid #007bff;}
 </style>
 </head>
@@ -76,9 +77,9 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
   <h1>Withdraw</h1>
   <p>Choose account to withdraw (Min 20 USD):</p>
   <div class="payment-icons">
-    <img src="https://cryptologos.cc/logos/binance-coin-bnb-logo.png" alt="Binance" id="binanceBtn">
-    <img src="https://cryptologos.cc/logos/bybit-byt-logo.png" alt="Bybit" id="bybitBtn">
-    <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal" id="paypalBtn">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Binance_Logo.png" alt="Binance" id="binanceBtn">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/Bybit_logo.png" alt="Bybit" id="bybitBtn">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" id="paypalBtn">
   </div>
   <div class="ad-buttons">
     <button class="btn" id="mainWithdrawBtn" disabled>Withdraw</button>
@@ -133,7 +134,7 @@ function updateUI(){
 // Generate referral
 function generateReferral(){
   const user=tg.initDataUnsafe.user;
-  if(user && user.id){referralLink.textContent=`https://t.me/YourBot?start=ref${user.id}`;}
+  if(user && user.id){referralLink.textContent=`https://t.me/Monetag_alamin_bot?start=${user.id}`;}
 }
 
 // Watch Ads
@@ -161,7 +162,7 @@ const bybitBtn=document.getElementById('bybitBtn');
 const paypalBtn=document.getElementById('paypalBtn');
 function selectPlatform(platform, btn){
   selectedPlatform=platform;
-  [binanceBtn, bybitBtn, paypalBtn].forEach(b=>b.classList.remove('selected'));
+  [binanceBtn,bybitBtn,paypalBtn].forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');
   updateUI();
 }
