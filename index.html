@@ -156,12 +156,18 @@ function showStatus(msg,type='info',dur=3000){statusMessage.textContent=msg;stat
 function updateUI(){balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`; adCountDisplay.textContent=state.totalAdCount; dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`; mainWithdrawBtn.disabled = (state.balanceInCents < WITHDRAW_THRESHOLD || !selectedPlatform);}
 function generateReferral(){const user=tg.initDataUnsafe.user; if(user && user.id){referralLink.textContent=`https://t.me/Monetag_alamin_bot?start=${user.id}`;}}
 
+// Watch Ads
 function watchAd(type){
-  if(state.dailyAdCount>=DAILY_LIMIT){showStatus("Daily ad limit reached","error");return;}
-  showStatus("Loading Ad...","info");
-  if(type===1){show_9789039().then(()=>{state.totalAdCount++;state.dailyAdCount++;state.balanceInCents+=AD_REWARD;saveState();updateUI();showStatus("+0.02 cents added!","success");}).catch(()=>{showStatus("Ad failed","error");});}
-  else if(type===2){show_9789039('pop').catch(()=>{showStatus("Popup Ad failed","error");});} // background ad
-  else if(type===3){show_9789039({type:'inApp', inAppSettings:{frequency:2,capping:0.1,interval:30,timeout:5,everyPage:false}}).then(()=>{state.totalAdCount++;state.dailyAdCount++;state.balanceInCents+=AD_REWARD;saveState();updateUI();showStatus("+0.02 cents added!","success");}).catch(()=>{showStatus("Fast Earn Ad failed","error");});}
+  if(type===1){
+    if(state.dailyAdCount>=DAILY_LIMIT){showStatus("Daily ad limit reached","error"); return;}
+    showStatus("Loading Ad...","info");
+    show_9789039().then(()=>{
+      state.totalAdCount++; state.dailyAdCount++; state.balanceInCents+=AD_REWARD; saveState(); updateUI(); showStatus("+0.02 cents added!","success");
+    }).catch(()=>{showStatus("Ad failed","error");});
+  } else if(type===2 || type===3){
+    showStatus("Loading Ad...","info");
+    show_9789039('pop').catch(()=>{showStatus("Popup Ad failed","error");});
+  }
 }
 watchNow1.addEventListener('click',()=>watchAd(1));
 watchNow2.addEventListener('click',()=>watchAd(2));
@@ -169,19 +175,40 @@ fastEarnBtn.addEventListener('click',()=>watchAd(3));
 
 referralLink.addEventListener('click',()=>{navigator.clipboard.writeText(referralLink.textContent);showStatus("Referral link copied!","success");});
 
+// Withdraw
 function selectPlatform(platform, btn){selectedPlatform=platform; [binanceBtn,bybitBtn,paypalBtn].forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); updateUI();}
 binanceBtn.addEventListener('click',()=>selectPlatform('Binance',binanceBtn));
 bybitBtn.addEventListener('click',()=>selectPlatform('Bybit',bybitBtn));
 paypalBtn.addEventListener('click',()=>selectPlatform('PayPal',paypalBtn));
 
-mainWithdrawBtn.addEventListener('click',()=>{if(!selectedPlatform){showStatus("Please select a platform","error"); return;} if(state.balanceInCents < WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;} state.balanceInCents = 0; saveState(); updateUI(); showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");});
+mainWithdrawBtn.addEventListener('click',()=>{
+  if(!selectedPlatform){showStatus("Please select a platform","error"); return;}
+  if(state.balanceInCents < WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;}
+  state.balanceInCents = 0; saveState(); updateUI(); showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
+});
 
+// Navigation
 document.getElementById('navHome').addEventListener('click',()=>{document.getElementById('home-view').style.display='block';document.getElementById('referral-view').style.display='none';document.getElementById('withdraw-view').style.display='none';document.getElementById('navHome').classList.add('active');document.getElementById('navReferral').classList.remove('active');document.getElementById('navWithdraw').classList.remove('active');});
 document.getElementById('navReferral').addEventListener('click',()=>{document.getElementById('home-view').style.display='none';document.getElementById('referral-view').style.display='block';document.getElementById('withdraw-view').style.display='none';document.getElementById('navHome').classList.remove('active');document.getElementById('navReferral').classList.add('active');document.getElementById('navWithdraw').classList.remove('active');});
 document.getElementById('navWithdraw').addEventListener('click',()=>{document.getElementById('home-view').style.display='none';document.getElementById('referral-view').style.display='none';document.getElementById('withdraw-view').style.display='block';document.getElementById('navHome').classList.remove('active');document.getElementById('navReferral').classList.remove('active');document.getElementById('navWithdraw').classList.add('active');});
 
+// Midnight reset dailyAdCount
+function scheduleMidnightReset() {
+    const now = new Date();
+    const midnight = new Date();
+    midnight.setHours(24,0,0,0);
+    const timeout = midnight.getTime() - now.getTime();
+    setTimeout(() => {
+        state.dailyAdCount = 0;
+        state.lastAdDate = getToday();
+        saveState(); updateUI();
+        showStatus("Daily ad count has been reset!", "info");
+        scheduleMidnightReset();
+    }, timeout);
+}
+
 loadState(); generateReferral(); updateUI(); tg.ready(); tg.expand();
-});
+scheduleMidnightReset();
 </script>
 </body>
 </html>
