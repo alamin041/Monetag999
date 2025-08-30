@@ -230,6 +230,130 @@ document.addEventListener('DOMContentLoaded', function(){
       state.dailySignupCount++;
       saveState(); updateUI();
       showStatus("Sign-up completed!","success");
+document.addEventListener('DOMContentLoaded', function(){
+  const tg = window.Telegram?.WebApp || {ready:()=>{},expand:()=>{}};
+
+  const balanceDisplay = document.getElementById('balanceDisplay');
+  const adCountDisplay = document.getElementById('adCountDisplay');
+  const dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay');
+  const dailySignupCountDisplay = document.getElementById('dailySignupCountDisplay');
+  const watchNow1 = document.getElementById('watchNow1');
+  const signupBtn = document.getElementById('signupBtn');
+  const signupNote = document.getElementById('signupNote');
+  const mainWithdrawBtn = document.getElementById('mainWithdrawBtn');
+  const referralLink = document.getElementById('referralLink');
+  const statusMessage = document.getElementById('statusMessage');
+  const binanceBtn = document.getElementById('binanceBtn');
+  const bybitBtn = document.getElementById('bybitBtn');
+  const paypalBtn = document.getElementById('paypalBtn');
+  const uwolnBtn = document.getElementById('uwolnBtn');
+  const navHome = document.getElementById('navHome');
+  const navReferral = document.getElementById('navReferral');
+  const navWithdraw = document.getElementById('navWithdraw');
+  const dateTimeDisplay = document.getElementById('dateTimeDisplay');
+
+  const WITHDRAW_THRESHOLD = 2000;
+  const AD_REWARD = 2;
+  const DAILY_LIMIT = 20;
+  const SIGNUP_THRESHOLD = 15;
+
+  let state = {balanceInCents:0,totalAdCount:0,dailyAdCount:0,dailySignupCount:0,lastAdDate:null};
+  let selectedPlatform = null;
+  let adInProgress = false;
+
+  function getToday(){return new Date().toISOString().split('T')[0];}
+  function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
+  function loadState(){
+      try{
+          let s=JSON.parse(localStorage.getItem('earningState'));
+          if(s) state={...state,...s};
+      }catch{}
+      if(state.lastAdDate!==getToday()){
+          state.dailyAdCount=0;
+          state.dailySignupCount=0;
+          state.lastAdDate=getToday();
+          saveState();
+      }
+  }
+
+  function showStatus(msg,type='info',dur=3000){
+      statusMessage.textContent=msg;
+      statusMessage.className=`status-message ${type}`;
+      statusMessage.style.display='block';
+      setTimeout(()=>{statusMessage.style.display='none';},dur);
+  }
+
+  function updateUI(){
+      balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;
+      adCountDisplay.textContent=state.totalAdCount;
+      dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
+      dailySignupCountDisplay.textContent=`${state.dailySignupCount} / 1`;
+
+      [adCountDisplay,dailyAdCountDisplay,dailySignupCountDisplay].forEach(el=>{
+          el.classList.add('animate');
+          setTimeout(()=>el.classList.remove('animate'),600);
+      });
+
+      signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
+      mainWithdrawBtn.disabled = (state.balanceInCents < WITHDRAW_THRESHOLD || !selectedPlatform);
+      signupNote.style.display = (state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1) ? 'block' : 'none';
+  }
+
+  function generateReferral(){ referralLink.textContent="https://t.me/Monetag_alamin_bot"; }
+  function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
+  setInterval(updateDateTime,1000); updateDateTime();
+
+  // ===== Core: Ad credit logic =====
+  function creditAd(){
+      state.totalAdCount++;
+      state.dailyAdCount++;
+      state.balanceInCents += AD_REWARD;
+      saveState();
+      updateUI();
+      adInProgress = false;
+      watchNow1.disabled = false;
+  }
+
+  function playSdkAd(){
+      try{
+        if(typeof show_9789039 === "function"){
+          show_9789039({
+            onClose: (completed) => {
+              if(completed){ 
+                creditAd();
+                showStatus("Ad সম্পূর্ণ হয়েছে! কাউন্ট আপডেট হয়েছে।","success");
+              } else {
+                adInProgress = false;
+                watchNow1.disabled = false;
+                showStatus("Ad সম্পূর্ণ হয়নি, আবার চেষ্টা করুন।","error");
+              }
+            }
+          });
+        } else { throw new Error("SDK not loaded"); }
+      } catch(e){
+        console.error(e);
+        adInProgress = false;
+        watchNow1.disabled = false;
+        showStatus("Ad load failed, retry করুন।","error");
+      }
+  }
+
+  function watchAd(){
+      if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return; }
+      if(adInProgress) return;
+      adInProgress = true;
+      watchNow1.disabled = true;
+      showStatus("Ad loading... Please watch till the end.","info");
+      playSdkAd();
+  }
+  watchNow1.addEventListener('click', watchAd);
+
+  // ===== Sign-up =====
+  signupBtn.addEventListener('click', ()=>{
+    if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+      state.dailySignupCount++;
+      saveState(); updateUI();
+      showStatus("Sign-up completed!","success");
     } else { showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error"); }
   });
 
