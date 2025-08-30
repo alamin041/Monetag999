@@ -139,28 +139,40 @@ let selectedPlatform = null;
 function getToday(){return new Date().toISOString().split('T')[0];}
 function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
 function loadState(){
-  try{
-    let s=JSON.parse(localStorage.getItem('earningState'));
-    if(s) state={...state,...s};
-  }catch{}
-  if(state.lastAdDate!==getToday()){
-    state.dailyAdCount=0; state.dailySignupCount=0; state.lastAdDate=getToday(); saveState();
-  }
+    try{
+        let s=JSON.parse(localStorage.getItem('earningState'));
+        if(s) state={...state,...s};
+    }catch{}
+    if(state.lastAdDate!==getToday()){
+        state.dailyAdCount=0;
+        state.dailySignupCount=0;
+        state.lastAdDate=getToday();
+        saveState();
+    }
 }
-function showStatus(msg,type='info',dur=3000){statusMessage.textContent=msg;statusMessage.className=`status-message ${type}`;statusMessage.style.display='block';setTimeout(()=>{statusMessage.style.display='none';},dur);}
+
+function showStatus(msg,type='info',dur=3000){
+    statusMessage.textContent=msg;
+    statusMessage.className=`status-message ${type}`;
+    statusMessage.style.display='block';
+    setTimeout(()=>{statusMessage.style.display='none';},dur);
+}
+
 function updateUI(){
     balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;
     adCountDisplay.textContent=state.totalAdCount;
     dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
     dailySignupCountDisplay.textContent=`${state.dailySignupCount} / 1`;
-    signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
-    mainWithdrawBtn.disabled=(state.balanceInCents<WITHDRAW_THRESHOLD || !selectedPlatform);
+
     [adCountDisplay,dailyAdCountDisplay,dailySignupCountDisplay].forEach(el=>{
-      el.classList.remove('animate');
-      void el.offsetWidth; 
-      el.classList.add('animate');
+        el.classList.add('animate');
+        setTimeout(()=>el.classList.remove('animate'),600);
     });
+
+    signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
+    mainWithdrawBtn.disabled = (state.balanceInCents<WITHDRAW_THRESHOLD || !selectedPlatform);
 }
+
 function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
 function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
 setInterval(updateDateTime,1000); updateDateTime();
@@ -172,27 +184,36 @@ function watchAd() {
     if(typeof show_9789039 !== "function"){showStatus("SDK not loaded","error"); return;}
     show_9789039({
       onClose: (completed)=>{
-        const adCompleted = (completed===undefined)?true:completed;
-        if(adCompleted){
-          state.totalAdCount++; state.dailyAdCount++; saveState(); updateUI();
+        if(completed){
+          state.totalAdCount++;
+          state.dailyAdCount++;
+          state.balanceInCents += AD_REWARD;
+          saveState(); updateUI();
           showStatus("+0.02 USD added!","success");
-          if(state.totalAdCount>=SIGNUP_THRESHOLD && state.dailySignupCount<1){signupNote.style.display='block';}
-        }else{showStatus("Ad not completed","error");}
+          if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+              signupNote.style.display='block';
+          }
+        } else {
+          showStatus("Ad not completed","error");
+        }
       }
     });
 }
-watchNow1.addEventListener('click',watchAd);
+watchNow1.addEventListener('click', watchAd);
 
 // Sign-up
-signupBtn.addEventListener('click',()=>{
-  if(state.totalAdCount>=SIGNUP_THRESHOLD && state.dailySignupCount<1){
+signupBtn.addEventListener('click', ()=>{
+  if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
     show_9789039({
       onClose:(completed)=>{
-        const adCompleted = (completed===undefined)?true:completed;
-        if(adCompleted){
-          state.dailySignupCount++; saveState(); updateUI(); signupNote.style.display='none';
+        if(completed){
+          state.dailySignupCount++;
+          saveState(); updateUI();
+          signupNote.style.display='none';
           showStatus("Sign-up completed!","success");
-        }else{showStatus("Sign-up not completed, click Continue","error");}
+        } else {
+          showStatus("Sign-up not completed, please click Continue","error");
+        }
       }
     });
   }
@@ -202,7 +223,8 @@ signupBtn.addEventListener('click',()=>{
 function selectPlatform(platform, btn){
   selectedPlatform = platform;
   [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected'); updateUI();
+  btn.classList.add('selected');
+  updateUI();
 }
 binanceBtn.addEventListener('click',()=>selectPlatform('Binance',binanceBtn));
 bybitBtn.addEventListener('click',()=>selectPlatform('Bybit',bybitBtn));
@@ -213,21 +235,57 @@ uwolnBtn.addEventListener('click',()=>selectPlatform('Uwoln',uwolnBtn));
 mainWithdrawBtn.addEventListener('click',()=>{
   if(!selectedPlatform){showStatus("Please select a platform","error"); return;}
   if(state.balanceInCents<WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;}
-  state.balanceInCents=0; saveState(); updateUI(); showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
+  state.balanceInCents=0; saveState(); updateUI();
+  showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
 });
 
 // Navigation
-function showView(viewId){['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none'); document.getElementById(viewId).style.display='block';}
-navHome.addEventListener('click',()=>{showView('home-view'); navHome.classList.add('active'); navReferral.classList.remove('active'); navWithdraw.classList.remove('active');});
-navReferral.addEventListener('click',()=>{showView('referral-view'); navHome.classList.remove('active'); navReferral.classList.add('active'); navWithdraw.classList.remove('active');});
-navWithdraw.addEventListener('click',()=>{showView('withdraw-view'); navHome.classList.remove('active'); navReferral.classList.remove('active'); navWithdraw.classList.add('active');});
+function showView(viewId){
+  ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
+  document.getElementById(viewId).style.display='block';
+}
+navHome.addEventListener('click',()=>{
+  showView('home-view');
+  navHome.classList.add('active');
+  navReferral.classList.remove('active');
+  navWithdraw.classList.remove('active');
+});
+navReferral.addEventListener('click',()=>{
+  showView('referral-view');
+  navHome.classList.remove('active');
+  navReferral.classList.add('active');
+  navWithdraw.classList.remove('active');
+});
+navWithdraw.addEventListener('click',()=>{
+  showView('withdraw-view');
+  navHome.classList.remove('active');
+  navReferral.classList.remove('active');
+  navWithdraw.classList.add('active');
+});
 
 // Midnight reset
-function scheduleMidnightReset(){const now=new Date(); const midnight=new Date(); midnight.setHours(24,0,0,0); const timeout=midnight.getTime()-now.getTime();
-  setTimeout(()=>{state.dailyAdCount=0; state.dailySignupCount=0; state.lastAdDate=getToday(); saveState(); updateUI(); showStatus("Daily ad count has been reset!","info"); scheduleMidnightReset();}, timeout);
+function scheduleMidnightReset(){
+  const now=new Date();
+  const midnight=new Date();
+  midnight.setHours(24,0,0,0);
+  const timeout=midnight.getTime()-now.getTime();
+  setTimeout(()=>{
+    state.dailyAdCount=0;
+    state.dailySignupCount=0;
+    state.lastAdDate=getToday();
+    saveState();
+    updateUI();
+    showStatus("Daily ad count and sign-up reset!","info");
+    scheduleMidnightReset();
+  }, timeout);
 }
 
-loadState(); generateReferral(); updateUI(); tg.ready(); tg.expand(); scheduleMidnightReset();
+loadState();
+generateReferral();
+updateUI();
+tg.ready();
+tg.expand();
+scheduleMidnightReset();
 });
 </script>
 </body>
