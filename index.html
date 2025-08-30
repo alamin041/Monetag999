@@ -163,12 +163,10 @@ function updateUI(){
     adCountDisplay.textContent=state.totalAdCount;
     dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
     dailySignupCountDisplay.textContent=`${state.dailySignupCount} / 1`;
-
     [adCountDisplay,dailyAdCountDisplay,dailySignupCountDisplay].forEach(el=>{
         el.classList.add('animate');
         setTimeout(()=>el.classList.remove('animate'),600);
     });
-
     signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
     mainWithdrawBtn.disabled = (state.balanceInCents<WITHDRAW_THRESHOLD || !selectedPlatform);
 }
@@ -206,7 +204,8 @@ signupBtn.addEventListener('click', ()=>{
   if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
     show_9789039({
       onClose:(completed)=>{
-        if(completed){state.dailySignupCount++;
+        if(completed){
+          state.dailySignupCount++;
           saveState(); updateUI();
           signupNote.style.display='none';
           showStatus("Sign-up completed!","success");
@@ -243,24 +242,9 @@ function showView(viewId){
   ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
   document.getElementById(viewId).style.display='block';
 }
-navHome.addEventListener('click',()=>{
-  showView('home-view');
-  navHome.classList.add('active');
-  navReferral.classList.remove('active');
-  navWithdraw.classList.remove('active');
-});
-navReferral.addEventListener('click',()=>{
-  showView('referral-view');
-  navHome.classList.remove('active');
-  navReferral.classList.add('active');
-  navWithdraw.classList.remove('active');
-});
-navWithdraw.addEventListener('click',()=>{
-  showView('withdraw-view');
-  navHome.classList.remove('active');
-  navReferral.classList.remove('active');
-  navWithdraw.classList.add('active');
-});
+navHome.addEventListener('click',()=>{showView('home-view');navHome.classList.add('active');navReferral.classList.remove('active');navWithdraw.classList.remove('active');});
+navReferral.addEventListener('click',()=>{showView('referral-view');navHome.classList.remove('active');navReferral.classList.add('active');navWithdraw.classList.remove('active');});
+navWithdraw.addEventListener('click',()=>{showView('withdraw-view');navHome.classList.remove('active');navReferral.classList.remove('active');navWithdraw.classList.add('active');});
 
 // Midnight reset
 function scheduleMidnightReset(){
