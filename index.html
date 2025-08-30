@@ -107,6 +107,7 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 </footer>
 
 <script>
+// এখানে JS কোড সব একসাথে যা SDK এড শেষ হলে কাউন্ট করবে
 document.addEventListener('DOMContentLoaded', function(){
 const tg = window.Telegram.WebApp;
 const balanceDisplay=document.getElementById('balanceDisplay');
@@ -170,50 +171,40 @@ function updateUI(){
     });
 
     signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
-    mainWithdrawBtn.disabled = (state.balanceInCents<WITHDRAW_THRESHOLD || !selectedPlatform);
+    mainWithdrawBtn.disabled = (state.balanceInCents < WITHDRAW_THRESHOLD || !selectedPlatform);
 }
 
 function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
 function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
 setInterval(updateDateTime,1000); updateDateTime();
 
+// Watch Ad with SDK complete callback
 function watchAd() {
-    if(state.dailyAdCount >= DAILY_LIMIT){ 
-        showStatus("Daily ad limit reached","error"); 
-        return;
-    }
+    if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return;}
     showStatus("Loading Ad...","info");
-
-    if(typeof show_9789039 !== "function"){ 
-        showStatus("SDK not loaded","error"); 
-        return;
-    }
-
-    // SDK এড চালানো
+    if(typeof show_9789039 !== "function"){showStatus("SDK not loaded","error"); return;}
     show_9789039({
-        onClose: function(completed) {
-            // শুধুমাত্র এড সম্পূর্ণ হলে
-            if(completed) {
-                //  এড শেষ হওয়ার পরে কাউন্ট বাড়ানো
-                state.totalAdCount++;
-                state.dailyAdCount++;
-                state.balanceInCents += AD_REWARD;
-                saveState(); 
-                updateUI();
-                showStatus("+0.02 USD added!","success");
+      onClose: (completed)=>{
+        if(completed){
+          // SDK ad fully watched
+          state.totalAdCount++;
+          state.dailyAdCount++;
+          state.balanceInCents += AD_REWARD;
+          saveState(); updateUI();
+          showStatus("+0.02 USD added!","success");
 
-                if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-                    signupNote.style.display='block';
-                }
-            } else {
-                showStatus("Ad not completed","error");
-            }
+          if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+              signupNote.style.display='block';
+          }
+        } else {
+          showStatus("Ad not completed","error");
         }
+      }
     });
 }
 watchNow1.addEventListener('click', watchAd);
 
-// Sign-up
+// Sign-up button
 signupBtn.addEventListener('click', ()=>{
   if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
     show_9789039({
@@ -292,6 +283,7 @@ function scheduleMidnightReset(){
   }, timeout);
 }
 
+// Initialize
 loadState();
 generateReferral();
 updateUI();
