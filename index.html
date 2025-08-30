@@ -26,14 +26,8 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .ad-info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;text-align:center;}
 .ad-info-item h3{font-size:20px;font-weight:600;margin:0 0 5px 0;color:#fff;}
 .ad-info-item p{font-size:14px;color:#8a8a8a;margin:0;}
-.ad-info-item h3.animate {
-  animation: pulseCount 0.6s ease-in-out;
-}
-@keyframes pulseCount {
-  0% { transform: scale(1); color: #fff; }
-  50% { transform: scale(1.3); color: #00d4ff; }
-  100% { transform: scale(1); color: #fff; }
-}
+.ad-info-item h3.animate {animation: pulseCount 0.6s ease-in-out;}
+@keyframes pulseCount {0%{transform:scale(1);color:#fff;}50%{transform:scale(1.3);color:#00d4ff;}100%{transform:scale(1);color:#fff;}}
 .ad-buttons{display:flex;flex-direction:column;gap:15px;margin-bottom:25px;}
 .btn{width:100%;padding:16px;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:transform 0.2s ease,background-color 0.3s ease,box-shadow 0.3s ease;background:linear-gradient(145deg,var(--btn),#0056b3);color:var(--btnText);box-shadow:0 6px 15px rgba(0,123,255,0.3);}
 .btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 8px 20px rgba(0,123,255,0.4);}
@@ -249,28 +243,13 @@ navHome.addEventListener('click',()=>{showView('home-view'); navHome.classList.a
 navReferral.addEventListener('click',()=>{showView('referral-view'); navHome.classList.remove('active'); navReferral.classList.add('active'); navWithdraw.classList.remove('active');});
 navWithdraw.addEventListener('click',()=>{showView('withdraw-view'); navHome.classList.remove('active'); navReferral.classList.remove('active'); navWithdraw.classList.add('active');});
 
-function scheduleMidnightReset(){
-  const now=new Date();
-  const midnight=new Date();
-  midnight.setHours(24,0,0,0);
-  const timeout=midnight.getTime()-now.getTime();
-  setTimeout(()=>{
-    state.dailyAdCount=0;
-    state.dailySignupCount=0;
-    state.lastAdDate=getToday();
-    saveState(); updateUI();
-    showStatus("Daily ad & signup count has been reset!","info");
-    scheduleMidnightReset();
-  },}, timeout);
+function scheduleMidnightReset(){const now=new Date(); const midnight=new Date(); midnight.setHours(24,0,0,0); const timeout=midnight.getTime()-now.getTime();
+  setTimeout(()=>{state.dailyAdCount=0; state.dailySignupCount=0; state.lastAdDate=getToday(); saveState(); updateUI(); showStatus("Daily ad count has been reset!","info"); scheduleMidnightReset();}, timeout);
 }
 
-// Initial load
-loadState();
-updateUI();
-generateReferral();
-scheduleMidnightReset();
+loadState(); generateReferral(); updateUI(); tg.ready(); tg.expand(); scheduleMidnightReset();
 
-}); // DOMContentLoaded
+});
 </script>
 </body>
 </html>
