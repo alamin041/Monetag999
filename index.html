@@ -106,7 +106,6 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 <script>
 document.addEventListener('DOMContentLoaded', function(){
 const tg = window.Telegram.WebApp;
-
 const balanceDisplay=document.getElementById('balanceDisplay');
 const adCountDisplay=document.getElementById('adCountDisplay');
 const dailyAdCountDisplay=document.getElementById('dailyAdCountDisplay');
@@ -152,40 +151,43 @@ setInterval(updateDateTime,1000); updateDateTime();
 function watchAd() {
     if (state.dailyAdCount >= DAILY_LIMIT) { showStatus("Daily ad limit reached","error"); return;}
     showStatus("Loading Ad...","info");
-    show_9789039()
-    .then(adResult => {
-        if(adResult.duration >= adResult.totalDuration){
-            state.totalAdCount++;
-            state.dailyAdCount++;
-            state.balanceInCents += AD_REWARD;
-            saveState(); updateUI();
-            showStatus("+0.02 USD added!","success");
-            if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignups < 1){
-                signupNote.style.display='block';
-                signupBtn.disabled=false;
-            }
+    if(typeof show_9789039 !== "function"){showStatus("SDK not loaded","error"); return;}
+    show_9789039({
+      onClose: (completed)=>{
+        if(completed){
+          state.totalAdCount++;
+          state.dailyAdCount++;
+          state.balanceInCents += AD_REWARD;
+          saveState(); updateUI();
+          showStatus("+0.02 USD added!","success");
+          if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignups < 1){
+            signupNote.style.display='block';
+            signupBtn.disabled=false;
+          }
         } else {
-            showStatus("Ad not completed yet","error");
+          showStatus("Ad not completed","error");
         }
-    })
-    .catch(()=>{showStatus("Ad failed to load","error");});
+      }
+    });
 }
 watchNow1.addEventListener('click', watchAd);
 
-// Sign-up Ad (no reward, only continue completes)
+// Sign-up Ad (only Continue completes)
 signupBtn.addEventListener('click', ()=>{
   if(state.totalAdCount>=SIGNUP_THRESHOLD && state.dailySignups<1){
-    show_9789039().then(adResult=>{
-        if(adResult.completed){ // user clicked Continue/Finish
-            state.dailySignups++;
-            saveState();
-            updateUI();
-            signupNote.style.display='none';
-            showStatus("Sign-up completed!","success");
+    show_9789039({
+      onClose:(completed)=>{
+        if(completed){
+          state.dailySignups++;
+          saveState(); updateUI();
+          signupNote.style.display='none';
+          showStatus("Sign-up completed!","success");
         } else {
-            showStatus("Sign-up not completed, please click Continue to finish.","error");
+          showStatus("Sign-up not completed, please click Continue to finish.","error");
         }
-    }).catch(()=>{showStatus("Sign-up Ad failed to load","error");});
+      }
+    });
+  }
 });
 
 // Platform select
