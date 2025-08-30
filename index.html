@@ -9,27 +9,34 @@
 <script src="//libtl.com/sdk.js" data-zone="9789039" data-sdk="show_9789039"></script>
 
 <style>
+/* ================== CSS START ================== */
 :root{
   --bg:#121212; --text:#e0e0e0; --btn:#007bff; --btnText:#fff;
   --card:#1e1e1e; --border:#333; --success:#28a745; --danger:#dc3545; --accent:#ff3b3f;
 }
+
 body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;min-height:100vh;text-align:center;}
+
 .container{width:100%; max-width:500px;}
 .view{display:none;width:100%;animation:fadeIn 0.4s ease-in-out;}
 #home-view{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);}}
+
 .header{margin-bottom:25px;}
 .header h1{font-size:28px;font-weight:700;margin-bottom:5px;color:#fff;}
 .header p{color:#8a8a8a;font-size:14px;}
+
 .card{background:var(--card);padding:25px;border-radius:16px;margin-bottom:25px;box-shadow:0 8px 16px rgba(0,0,0,0.3);border:1px solid var(--border);}
 .card h2{margin:0 0 12px 0;font-size:16px;color:#8a8a8a;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
 .balance-amount{font-size:36px;font-weight:700;color:#fff;margin-bottom:10px;animation:balanceAnim 0.5s;}
 @keyframes balanceAnim{0%{transform:scale(0.8);}100%{transform:scale(1);}}
+
 .ad-info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;text-align:center;}
 .ad-info-item h3{font-size:20px;font-weight:600;margin:0 0 5px 0;color:#fff;}
 .ad-info-item p{font-size:14px;color:#8a8a8a;margin:0;}
 .ad-info-item h3.animate {animation: pulseCount 0.6s ease-in-out;}
 @keyframes pulseCount {0%{transform:scale(1);color:#fff;}50%{transform:scale(1.3);color:#00d4ff;}100%{transform:scale(1);color:#fff;}}
+
 .ad-buttons{display:flex;flex-direction:column;gap:15px;margin-bottom:25px;}
 .btn{width:100%;padding:16px;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:transform 0.2s ease,background-color 0.3s ease,box-shadow 0.3s ease;background:linear-gradient(145deg,var(--btn),#0056b3);color:var(--btnText);box-shadow:0 6px 15px rgba(0,123,255,0.3);}
 .btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 8px 20px rgba(0,123,255,0.4);}
@@ -37,32 +44,42 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .btn:disabled{background:#555;color:#888;cursor:not-allowed;box-shadow:none;transform:none;}
 #mainWithdrawBtn{background:linear-gradient(145deg,var(--success),#1e7e34);box-shadow:0 6px 15px rgba(40,167,69,0.3);}
 #mainWithdrawBtn:disabled{background:#555;box-shadow:none;}
+
 .status-message{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:90%;max-width:480px;padding:12px 15px;border-radius:10px;font-weight:500;display:none;animation:fadeIn 0.3s;z-index:1000;box-sizing:border-box;}
 .success{display:block;background-color:rgba(40,167,69,0.25);border-left:5px solid var(--success);color:var(--success);}
 .error{display:block;background-color:rgba(220,53,69,0.25);border-left:5px solid var(--danger);color:var(--danger);}
 .info{display:block;background-color:rgba(0,123,255,0.25);border-left:5px solid var(--btn);color:#008cff;}
+
 .highlight-circle{background:var(--accent);color:#fff;font-size:14px;font-weight:700;padding:12px 20px;border-radius:50px;margin-bottom:20px;display:inline-block;box-shadow:0 4px 8px rgba(255,59,63,0.3);animation:pulse 1.5s infinite;}
 @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
+
 .date-time{margin-bottom:15px;font-size:14px;color:#00d4ff;font-weight:600;animation:pulseTime 1.5s infinite;}
 @keyframes pulseTime{0%{transform:scale(1);opacity:0.7;}50%{transform:scale(1.05);opacity:1;}100%{transform:scale(1);opacity:0.7;}}
+
 .signup-note {margin-top:15px;padding:10px 15px;background:#ff3b3f;color:#fff;font-weight:600;border-radius:12px;display:none;animation:pulse 1.5s infinite;}
+
 .footer-nav{position:fixed;bottom:0;left:0;right:0;background-color:var(--card);display:flex;justify-content:space-around;padding:10px 0;box-shadow:0 -4px 12px rgba(0,0,0,0.3);border-top:1px solid var(--border);z-index:999;}
 .nav-btn{background:none;border:none;color:#8a8a8a;display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:500;cursor:pointer;padding:5px 15px;border-radius:12px;transition:color 0.2s, background-color 0.2s;}
 .nav-btn.active{color:var(--btn);}
 .nav-btn:hover:not(.active){color:#fff;}
+
 .payment-icons{display:flex;justify-content:space-around;margin-top:10px;}
 .payment-icons img{width:50px;height:50px;cursor:pointer;border-radius:8px;transition:transform 0.2s,box-shadow 0.2s;}
 .payment-icons img:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.4);}
 .payment-icons img.selected{border:2px solid #007bff;}
+/* ================== CSS END ================== */
 </style>
 </head>
+
 <body>
 <div class="container">
   <div class="date-time" id="dateTimeDisplay"></div>
 
+  <!-- ===== Home View ===== -->
   <div id="home-view" class="view">
     <div class="highlight-circle">সম্পূর্ণ AD না দেখলে আপনার কাজ সঠিক বলে গন্য হবে না।</div>
     <div class="header"><h1>Earning Platform</h1><p>Watch Ads & Earn USDT</p></div>
+
     <div class="card">
       <h2>Current Balance</h2>
       <div class="balance-amount" id="balanceDisplay">USDT 0.00</div>
@@ -72,6 +89,7 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
         <div class="ad-info-item"><h3 id="dailySignupCountDisplay">0 / 1</h3><p>Today's Sign-ups</p></div>
       </div>
     </div>
+
     <div class="ad-buttons">
       <button class="btn" id="watchNow1">Watch Now</button>
       <button class="btn" id="signupBtn" disabled>Sign-up</button>
@@ -79,12 +97,14 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
     </div>
   </div>
 
+  <!-- ===== Referral View ===== -->
   <div id="referral-view" class="view">
     <h1>Referral</h1>
     <p>Share your referral link and earn rewards!</p>
     <div id="referralLink" style="cursor:pointer;background:#111;padding:10px;border-radius:8px;word-break:break-word;">https://t.me/Monetag_alamin_bot</div>
   </div>
 
+  <!-- ===== Withdraw View ===== -->
   <div id="withdraw-view" class="view">
     <h1>Withdraw</h1>
     <p>Choose account to withdraw (Min 20 USD):</p>
@@ -112,6 +132,7 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 // ================== JS START ==================
 document.addEventListener('DOMContentLoaded', function(){
 
+  // ====== DOM elements ======
   const balanceDisplay = document.getElementById('balanceDisplay');
   const adCountDisplay = document.getElementById('adCountDisplay');
   const dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay');
@@ -128,8 +149,10 @@ document.addEventListener('DOMContentLoaded', function(){
   const uwolnBtn = document.getElementById('uwolnBtn');
   const navHome = document.getElementById('navHome');
   const navReferral = document.getElementById('navReferral');
+  const navWithdraw = document.getElementById('navWithdraw');
   const dateTimeDisplay = document.getElementById('dateTimeDisplay');
 
+  // ====== Config ======
   const AD_REWARD = 2; // cents (0.02 USD)
   const DAILY_LIMIT = 20;
   const SIGNUP_THRESHOLD = 15;
@@ -156,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function(){
       }
   }
 
+  // ====== Status message ======
   function showStatus(msg,type='info',dur=3000){
       statusMessage.textContent = msg;
       statusMessage.className = `status-message ${type}`;
@@ -163,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function(){
       setTimeout(()=>{ statusMessage.style.display='none'; }, dur);
   }
 
+  // ====== Update UI ======
   function updateUI(){
       balanceDisplay.textContent = `USDT ${(state.balanceInCents/100).toFixed(2)}`;
       adCountDisplay.textContent = state.totalAdCount;
@@ -179,12 +204,14 @@ document.addEventListener('DOMContentLoaded', function(){
       signupNote.style.display = (state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1) ? 'block' : 'none';
   }
 
+  // ====== Referral link ======
   function generateReferral(){ referralLink.textContent = "https://t.me/Monetag_alamin_bot"; }
 
+  // ====== Date & Time ======
   function updateDateTime(){ const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`; }
   setInterval(updateDateTime,1000); updateDateTime();
 
-  // ===== Ad credit logic =====
+  // ====== Ads credit logic ======
   function creditAd(){
       adInProgress = false;
       state.totalAdCount++;
@@ -217,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   watchNow1.addEventListener('click', watchAd);
 
-  // ===== Sign-up =====
+  // ====== Sign-up ======
   signupBtn.addEventListener('click', ()=>{
     if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
       state.dailySignupCount++;
@@ -226,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function(){
     } else { showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error"); }
   });
 
-  // ===== Platform select =====
+  // ====== Platform select ======
   function selectPlatform(platform, btn){
     selectedPlatform = platform;
     [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected'));
@@ -238,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function(){
   paypalBtn.addEventListener('click',()=>selectPlatform('PayPal',paypalBtn));
   uwolnBtn.addEventListener('click',()=>selectPlatform('Uwoln',uwolnBtn));
 
-  // ===== Withdraw =====
+  // ====== Withdraw ======
   mainWithdrawBtn.addEventListener('click', ()=>{
     if(!selectedPlatform){ showStatus("Please select a platform","error"); return; }
     if(state.balanceInCents < WITHDRAW_THRESHOLD){ showStatus("Insufficient balance","error"); return; }
@@ -246,34 +273,51 @@ document.addEventListener('DOMContentLoaded', function(){
     showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
   });
 
-  // ===== Navigation =====
+  // ====== Navigation ======
   function showView(viewId){
     ['home-view','referral-view','withdraw-view'].forEach(v => document.getElementById(v).style.display='none');
     document.getElementById(viewId).style.display='block';
   }
-  navHome.addEventListener('click',()=>{ showView('home-view'); navHome.classList.add('active'); navReferral.classList.remove('active'); navWithdraw.classList.remove('active'); });
-  navReferral.addEventListener('click',()=>{ showView('referral-view'); navHome.classList.remove('active'); navReferral.classList.add('active'); navWithdraw.classList.remove('active'); });
-  navWithdraw.addEventListener('click',()=>{ showView('withdraw-view'); navHome.classList.remove('active'); navReferral.classList.remove('active'); navWithdraw.classList.add('active'); });
+  navHome.addEventListener('click', () => {
+    showView('home-view');
+    navHome.classList.add('active');
+    navReferral.classList.remove('active');
+    navWithdraw.classList.remove('active');
+  });
+
+  navReferral.addEventListener('click', () => {
+    showView('referral-view');
+    navHome.classList.remove('active');
+    navReferral.classList.add('active');
+    navWithdraw.classList.remove('active');
+  });
+
+  navWithdraw.addEventListener('click', () => {
+    showView('withdraw-view');
+    navHome.classList.remove('active');
+    navReferral.classList.remove('active');
+    navWithdraw.classList.add('active');
+  });
 
   // ===== Midnight reset =====
-  function scheduleMidnightReset(){
+  function scheduleMidnightReset() {
     const now = new Date();
     const midnight = new Date();
-    midnight.setHours(24,0,0,0);
+    midnight.setHours(24, 0, 0, 0);
     const timeout = midnight.getTime() - now.getTime();
 
-    setTimeout(()=>{
+    setTimeout(() => {
       state.dailyAdCount = 0;
       state.dailySignupCount = 0;
       state.lastAdDate = getToday();
       saveState();
       updateUI();
-      showStatus("Daily ad count এবং sign-up reset হয়েছে!","info");
+      showStatus("Daily ad count এবং sign-up reset হয়েছে!", "info");
       scheduleMidnightReset();
     }, timeout);
   }
 
-  // ===== Init =====
+  // ===== Initialization =====
   loadState();
   generateReferral();
   updateUI();
