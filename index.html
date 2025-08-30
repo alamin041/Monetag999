@@ -23,7 +23,7 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .card h2{margin:0 0 12px 0;font-size:16px;color:#8a8a8a;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
 .balance-amount{font-size:36px;font-weight:700;color:#fff;margin-bottom:10px;animation:balanceAnim 0.5s;}
 @keyframes balanceAnim{0%{transform:scale(0.8);}100%{transform:scale(1);}}
-.ad-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;text-align:center;}
+.ad-info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;text-align:center;}
 .ad-info-item h3{font-size:20px;font-weight:600;margin:0 0 5px 0;color:#fff;}
 .ad-info-item p{font-size:14px;color:#8a8a8a;margin:0;}
 .ad-buttons{display:flex;flex-direction:column;gap:15px;margin-bottom:25px;}
@@ -66,6 +66,7 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
     <div class="ad-info-grid">
       <div class="ad-info-item"><h3 id="adCountDisplay">0</h3><p>Total Ads Watched</p></div>
       <div class="ad-info-item"><h3 id="dailyAdCountDisplay">0 / 20</h3><p>Today's Ads</p></div>
+      <div class="ad-info-item"><h3 id="dailySignupCountDisplay">0 / 1</h3><p>Today's Sign-ups</p></div>
     </div>
   </div>
   <div class="ad-buttons">
@@ -109,6 +110,7 @@ const tg = window.Telegram.WebApp;
 const balanceDisplay=document.getElementById('balanceDisplay');
 const adCountDisplay=document.getElementById('adCountDisplay');
 const dailyAdCountDisplay=document.getElementById('dailyAdCountDisplay');
+const dailySignupCountDisplay=document.getElementById('dailySignupCountDisplay');
 const watchNow1=document.getElementById('watchNow1');
 const signupBtn=document.getElementById('signupBtn');
 const signupNote=document.getElementById('signupNote');
@@ -129,18 +131,30 @@ const AD_REWARD=2;
 const DAILY_LIMIT=20;
 const SIGNUP_THRESHOLD=15;
 
-let state={balanceInCents:0,totalAdCount:0,dailyAdCount:0,lastAdDate:null,dailySignups:0};
+let state={balanceInCents:0,totalAdCount:0,dailyAdCount:0,lastAdDate:null,dailySignups:0,dailySignupCount:0};
 let selectedPlatform = null;
 
 function getToday(){return new Date().toISOString().split('T')[0];}
 function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
-function loadState(){try{let s=JSON.parse(localStorage.getItem('earningState'));if(s) state={...state,...s};}catch{} if(state.lastAdDate!==getToday()){state.dailyAdCount=0;state.lastAdDate=getToday();saveState();}}
+function loadState(){
+    try{
+        let s=JSON.parse(localStorage.getItem('earningState'));
+        if(s) state={...state,...s};
+    }catch{}
+    if(state.lastAdDate!==getToday()){
+        state.dailyAdCount=0;
+        state.dailySignupCount=0;
+        state.lastAdDate=getToday();
+        saveState();
+    }
+}
 function showStatus(msg,type='info',dur=3000){statusMessage.textContent=msg;statusMessage.className=`status-message ${type}`;statusMessage.style.display='block';setTimeout(()=>{statusMessage.style.display='none';},dur);}
 function updateUI(){
     balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;
     adCountDisplay.textContent=state.totalAdCount;
     dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
-    signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignups < 1);
+    dailySignupCountDisplay.textContent=`${state.dailySignupCount} / 1`;
+    signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
     mainWithdrawBtn.disabled=(state.balanceInCents<WITHDRAW_THRESHOLD || !selectedPlatform);
 }
 function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
@@ -154,13 +168,14 @@ function watchAd() {
     if(typeof show_9789039 !== "function"){showStatus("SDK not loaded","error"); return;}
     show_9789039({
       onClose: (completed)=>{
-        if(completed){
+        const adCompleted = (completed === undefined) ? true : completed;
+        if(adCompleted){
           state.totalAdCount++;
           state.dailyAdCount++;
           state.balanceInCents += AD_REWARD;
           saveState(); updateUI();
           showStatus("+0.02 USD added!","success");
-          if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignups < 1){
+          if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
             signupNote.style.display='block';
             signupBtn.disabled=false;
           }
@@ -172,13 +187,15 @@ function watchAd() {
 }
 watchNow1.addEventListener('click', watchAd);
 
-// Sign-up Ad (only Continue completes)
+// Sign-up Ad
 signupBtn.addEventListener('click', ()=>{
-  if(state.totalAdCount>=SIGNUP_THRESHOLD && state.dailySignups<1){
+  if(state.totalAdCount>=SIGNUP_THRESHOLD && state.dailySignupCount<1){
     show_9789039({
       onClose:(completed)=>{
-        if(completed){
+        const adCompleted = (completed === undefined) ? true : completed;
+        if(adCompleted){
           state.dailySignups++;
+          state.dailySignupCount++;
           saveState(); updateUI();
           signupNote.style.display='none';
           showStatus("Sign-up completed!","success");
@@ -216,8 +233,19 @@ navReferral.addEventListener('click',()=>{showView('referral-view'); navHome.cla
 navWithdraw.addEventListener('click',()=>{showView('withdraw-view'); navHome.classList.remove('active'); navReferral.classList.remove('active'); navWithdraw.classList.add('active');});
 
 // Midnight reset
-function scheduleMidnightReset(){const now=new Date(); const midnight=new Date(); midnight.setHours(24,0,0,0); const timeout=midnight.getTime()-now.getTime();
-  setTimeout(()=>{state.dailyAdCount=0; state.lastAdDate=getToday(); saveState(); updateUI(); showStatus("Daily ad count has been reset!","info"); scheduleMidnightReset();}, timeout);
+function scheduleMidnightReset(){
+  const now=new Date();
+  const midnight=new Date();
+  midnight.setHours(24,0,0,0);
+  const timeout=midnight.getTime()-now.getTime();
+  setTimeout(()=>{
+    state.dailyAdCount=0;
+    state.dailySignupCount=0;
+    state.lastAdDate=getToday();
+    saveState(); updateUI(); 
+    showStatus("Daily ad & signup count has been reset!","info");
+    scheduleMidnightReset();
+  }, timeout);
 }
 
 loadState(); generateReferral(); updateUI(); tg.ready(); tg.expand(); scheduleMidnightReset();
