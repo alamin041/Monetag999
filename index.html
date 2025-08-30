@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Earning Platform</title>
-
 <script src="//libtl.com/sdk.js" data-zone="9789039" data-sdk="show_9789039"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 <style>
 :root{
   --bg:#121212; --text:#e0e0e0; --btn:#007bff; --btnText:#fff;
@@ -76,7 +74,7 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
     <div class="ad-buttons">
       <button class="btn" id="watchNow1">Watch Now</button>
       <button class="btn" id="signupBtn" disabled>Sign-up</button>
-      <div class="signup-note" id="signupNote">১৫ টি কাজ সম্পূর্ণ হয়েছে! Sign-up করতে নিচের বাটনে ক্লিক করুন।</div>
+      <div class="signup-note" id="signupNote">১৫ টি কাজ সম্পূর্ণ হয়েছে! এই বার Sign-up বাটনে ক্লিক করুন।</div>
     </div>
   </div>
 
@@ -208,40 +206,23 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   watchNow1.addEventListener('click',watchAd);
 
-  // ===== Signup SDK Ad logic =====
-  signupBtn.addEventListener('click', () => {
+  // ===== Signup =====
+  signupBtn.addEventListener('click',()=>{
       if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-          signupBtn.disabled = true;
-          showStatus("Sign-up Ad loading... Please watch till the end.","info");
+          // SDK ad for signup
           if(typeof show_9789039 === "function"){
-              try{
-                  show_9789039({ onClose: (completed) => {
-                      if(completed){
-                          state.dailySignupCount++;
-                          saveState(); updateUI();
-                          showStatus("Sign-up completed!","success");
-                      } else {
-                          signupBtn.disabled = false;
-                          showStatus("Sign-up Ad not completed. Try again.","error");
-                      }
-                  }});
-              } catch(e){
-                  setTimeout(() => {
-                      state.dailySignupCount++;
-                      saveState(); updateUI();
-                      showStatus("Sign-up completed (fallback)!","success");
-                  }, AD_MIN_MS);
-              }
+              try{ show_9789039({onClose:(completed)=>{ 
+                  if(completed){ 
+                      state.dailySignupCount++; saveState(); updateUI();
+                      showStatus("Sign-up completed!","success");
+                  } 
+              }}); 
+              }catch{}
           } else {
-              setTimeout(() => {
-                  state.dailySignupCount++;
-                  saveState(); updateUI();
-                  showStatus("Sign-up completed (simulated)!","success");
-              }, AD_MIN_MS);
+              state.dailySignupCount++; saveState(); updateUI();
+              showStatus("Sign-up completed!","success");
           }
-      } else {
-          showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
-      }
+      } else { showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error"); }
   });
 
   // ===== Platform select =====
