@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Earning Platform</title>
+
 <script src="//libtl.com/sdk.js" data-zone="9789039" data-sdk="show_9789039"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
 :root{
   --bg:#121212; --text:#e0e0e0; --btn:#007bff; --btnText:#fff;
@@ -14,6 +16,7 @@
 body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;min-height:100vh;text-align:center;}
 .container{width:100%; max-width:500px;}
 .view{display:none;width:100%;animation:fadeIn 0.4s ease-in-out;}
+#home-view{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);}}
 .header{margin-bottom:25px;}
 .header h1{font-size:28px;font-weight:700;margin-bottom:5px;color:#fff;}
@@ -58,10 +61,9 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 <div class="container">
   <div class="date-time" id="dateTimeDisplay"></div>
 
-  <!-- Native Home -->
-  <div id="native-home-view" class="view">
+  <div id="home-view" class="view">
     <div class="highlight-circle">সম্পূর্ণ AD না দেখলে আপনার কাজ সঠিক বলে গন্য হবে না।</div>
-    <div class="header"><h1>Native Home</h1><p>Watch Ads & Earn USDT</p></div>
+    <div class="header"><h1>Earning Platform</h1><p>Watch Ads & Earn USDT</p></div>
     <div class="card">
       <h2>Current Balance</h2>
       <div class="balance-amount" id="balanceDisplay">USDT 0.00</div>
@@ -78,18 +80,19 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
     </div>
   </div>
 
-  <!-- Referral View -->
   <div id="referral-view" class="view">
     <h1>Referral</h1>
     <p>Share your referral link and earn rewards!</p>
     <div id="referralLink" style="cursor:pointer;background:#111;padding:10px;border-radius:8px;word-break:break-word;">https://t.me/Monetag_alamin_bot</div>
   </div>
 
-  <!-- Uwoln Withdraw View -->
-  <div id="uwoln-view" class="view">
-    <h1>Uwoln</h1>
-    <p>Withdraw or see other actions</p>
+  <div id="withdraw-view" class="view">
+    <h1>Withdraw</h1>
+    <p>Choose account to withdraw (Min 20 USD):</p>
     <div class="payment-icons">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Binance_Logo.png" alt="Binance" id="binanceBtn">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/5/5d/Bybit_logo.png" alt="Bybit" id="bybitBtn">
+      <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal" id="paypalBtn">
       <img src="UWOLN_LOGO_URL_HERE" alt="Uwoln" id="uwolnBtn">
     </div>
     <div class="ad-buttons">
@@ -101,192 +104,143 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 </div>
 
 <footer class="footer-nav">
-  <button class="nav-btn active" id="navNativeHome"><span class="icon">🏠</span><span>Home</span></button>
+  <button class="nav-btn active" id="navHome"><span class="icon">🏠</span><span>Home</span></button>
   <button class="nav-btn" id="navReferral"><span class="icon">🔗</span><span>Referral</span></button>
-  <button class="nav-btn" id="navUwoln"><span class="icon">💰</span><span>Uwoln</span></button>
+  <button class="nav-btn" id="navWithdraw"><span class="icon">💰</span><span>Withdraw</span></button>
 </footer>
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-const balanceDisplay=document.getElementById('balanceDisplay');
-const adCountDisplay=document.getElementById('adCountDisplay');
-const dailyAdCountDisplay=document.getElementById('dailyAdCountDisplay');
-const dailySignupCountDisplay=document.getElementById('dailySignupCountDisplay');
-const watchNow1=document.getElementById('watchNow1');
-const signupBtn=document.getElementById('signupBtn');
-const signupNote=document.getElementById('signupNote');
-const mainWithdrawBtn=document.getElementById('mainWithdrawBtn');
-const referralLink=document.getElementById('referralLink');
-const statusMessage=document.getElementById('statusMessage');
-const uwolnBtn=document.getElementById('uwolnBtn');
-const navNativeHome=document.getElementById('navNativeHome');
-const navReferral=document.getElementById('navReferral');
-const navUwoln=document.getElementById('navUwoln');
-const dateTimeDisplay=document.getElementById('dateTimeDisplay');
+  const balanceDisplay=document.getElementById('balanceDisplay');
+  const adCountDisplay=document.getElementById('adCountDisplay');
+  const dailyAdCountDisplay=document.getElementById('dailyAdCountDisplay');
+  const dailySignupCountDisplay=document.getElementById('dailySignupCountDisplay');
+  const watchNow1=document.getElementById('watchNow1');
+  const signupBtn=document.getElementById('signupBtn');
+  const signupNote=document.getElementById('signupNote');
+  const mainWithdrawBtn=document.getElementById('mainWithdrawBtn');
+  const referralLink=document.getElementById('referralLink');
+  const statusMessage=document.getElementById('statusMessage');
+  const binanceBtn=document.getElementById('binanceBtn');
+  const bybitBtn=document.getElementById('bybitBtn');
+  const paypalBtn=document.getElementById('paypalBtn');
+  const uwolnBtn=document.getElementById('uwolnBtn');
+  const navHome=document.getElementById('navHome');
+  const navReferral=document.getElementById('navReferral');
+  const navWithdraw=document.getElementById('navWithdraw');
+  const dateTimeDisplay=document.getElementById('dateTimeDisplay');
 
-// ===== Config =====
-const WITHDRAW_THRESHOLD=2000;   // 20 USD
-const AD_REWARD=2;               // 0.02 USD
-const DAILY_LIMIT=20;
-const SIGNUP_THRESHOLD=15;       // signup unlocks after 15 ads
-const AD_MIN_MS = 20000;         // 20 seconds
+  const WITHDRAW_THRESHOLD=2000; 
+  const AD_REWARD=2; 
+  const DAILY_LIMIT=20;
+  const SIGNUP_THRESHOLD=15; 
+  const AD_MIN_MS = 15000; 
 
-// ===== State =====
-let state={balanceInCents:0,totalAdCount:0,dailyAdCount:0,dailySignupCount:0,lastAdDate:null};
-let selectedPlatform = null;
-let adInProgress = false;
-let adCredited = false;
-let adStartTs = 0;
-let pageWasHidden = false;
+  let state={balanceInCents:0,totalAdCount:0,dailyAdCount:0,dailySignupCount:0,lastAdDate:null};
+  let selectedPlatform = null;
+  let adInProgress = false;
+  let adCredited = false;
+  let adStartTs = 0;
 
-function getToday(){return new Date().toISOString().split('T')[0];}
-function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
-function loadState(){
-    try{
-        let s=JSON.parse(localStorage.getItem('earningState'));
-        if(s) state={...state,...s};
-    }catch{}
-    if(state.lastAdDate!==getToday()){
-        state.dailyAdCount=0;
-        state.dailySignupCount=0;
-        state.lastAdDate=getToday();
-        saveState();
-    }
-}
-loadState();
-
-function showStatus(msg,type='info',dur=3000){
-    statusMessage.textContent=msg;
-    statusMessage.className=`status-message ${type}`;
-    statusMessage.style.display='block';
-    setTimeout(()=>{statusMessage.style.display='none';},dur);
-}
-
-function updateUI(){
-    balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;
-    adCountDisplay.textContent=state.totalAdCount;
-    dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
-    dailySignupCountDisplay.textContent=`${state.dailySignupCount} / 1`;
-
-    [adCountDisplay,dailyAdCountDisplay,dailySignupCountDisplay].forEach(el=>{
-        el.classList.add('animate');
-        setTimeout(()=>el.classList.remove('animate'),600);
-    });
-
-    signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
-    mainWithdrawBtn.disabled = (state.balanceInCents < WITHDRAW_THRESHOLD || !selectedPlatform);
-    signupNote.style.display = (state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1) ? 'block' : 'none';
-}
-
-function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
-generateReferral();
-function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
-setInterval(updateDateTime,1000); updateDateTime();
-
-// ===== Ad credit logic =====
-function creditAdOnce(){
-  if (adCredited) return;
-  adCredited = true;
-  adInProgress = false;
-  watchNow1.disabled = false;
-
-  state.totalAdCount++;
-  state.dailyAdCount++;
-  state.balanceInCents += AD_REWARD;
-  saveState(); updateUI();
-  showStatus("+0.02 USD added!","success");
-}
-
-document.addEventListener("adFinished", function(){
-  if (adInProgress) creditAdOnce();
-});
-
-document.addEventListener("visibilitychange", function(){
-  if (!adInProgress) return;
-
-  if (document.visibilityState === 'hidden') {
-    pageWasHidden = true;
-  } else if (document.visibilityState === 'visible' && pageWasHidden) {
-    const watched = Date.now() - adStartTs;
-    if (watched >= AD_MIN_MS) {
-      creditAdOnce();
-    } else {
-      adInProgress = false;
-      watchNow1.disabled = false;
-      showStatus("সম্পূর্ণ সময় দেখা হয়নি। আবার চেষ্টা করুন।","error");
-    }
-    pageWasHidden = false;
+  function getToday(){return new Date().toISOString().split('T')[0];}
+  function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
+  function loadState(){
+      try{
+          let s=JSON.parse(localStorage.getItem('earningState'));
+          if(s) state={...state,...s};
+      }catch{}
+      if(state.lastAdDate!==getToday()){
+          state.dailyAdCount=0;
+          state.dailySignupCount=0;
+          state.lastAdDate=getToday();
+          saveState();
+      }
   }
-});
 
-function playSdkAd(){
-  try{
-    if(typeof show_9789039 === "function"){
-      try { show_9789039({ onClose: (completed)=>{ if(completed) creditAdOnce(); } }); } catch(_){}
-      show_9789039();
-    } else {
-      setTimeout(()=>{ creditAdOnce(); }, AD_MIN_MS);
-    }
-  } catch(e){
-    setTimeout(()=>{ creditAdOnce(); }, AD_MIN_MS);
+  function showStatus(msg,type='info',dur=3000){
+      statusMessage.textContent=msg;
+      statusMessage.className=`status-message ${type}`;
+      statusMessage.style.display='block';
+      setTimeout(()=>{statusMessage.style.display='none';},dur);
   }
-}
 
-watchNow1.addEventListener('click', ()=>{
-    if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return;}
-    if(adInProgress) return;
-    adInProgress = true; adCredited = false; pageWasHidden = false; adStartTs = Date.now(); watchNow1.disabled = true;
-    showStatus("Ad loading... Please watch till the end.","info");
-    playSdkAd();
-});
+  function updateUI(){
+      balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;
+      adCountDisplay.textContent=state.totalAdCount;
+      dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
+      dailySignupCountDisplay.textContent=`${state.dailySignupCount} / 1`;
 
-// ===== Sign-up =====
-signupBtn.addEventListener('click', ()=>{
-  if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-    state.dailySignupCount++;
-    saveState(); updateUI();
-    showStatus("Sign-up completed!","success");
-  } else {
-    showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
+      [adCountDisplay,dailyAdCountDisplay,dailySignupCountDisplay].forEach(el=>{
+          el.classList.add('animate');
+          setTimeout(()=>el.classList.remove('animate'),600);
+      });
+
+      signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
+      mainWithdrawBtn.disabled = (state.balanceInCents < WITHDRAW_THRESHOLD || !selectedPlatform);
+      signupNote.style.display = (state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1) ? 'block' : 'none';
   }
-});
 
-// ===== Platform select =====
-uwolnBtn.addEventListener('click',()=>{
-  selectedPlatform = 'Uwoln';
-  uwolnBtn.classList.add('selected');
-  updateUI();
-});
+  function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
+  function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
+  setInterval(updateDateTime,1000); updateDateTime();
+  loadState(); updateUI(); generateReferral();
 
-// ===== Withdraw =====
-mainWithdrawBtn.addEventListener('click',()=>{
-  if(!selectedPlatform){showStatus("Please select a platform","error"); return;}
-  if(state.balanceInCents<WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;}
-  state.balanceInCents=0; saveState(); updateUI();
-  showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
-});
+  // ===== Ad logic =====
+  function creditAdOnce(){
+      if(adCredited) return;
+      adCredited=true; adInProgress=false;
+      watchNow1.disabled=false;
+      state.totalAdCount++; state.dailyAdCount++; state.balanceInCents += AD_REWARD;
+      saveState(); updateUI();
+      showStatus("+0.02 USD added!","success");
+  }
 
-// ===== Navigation =====
-function showView(viewId){
-  ['native-home-view','referral-view','uwoln-view'].forEach(v=>{
-    document.getElementById(v).style.display='none';
+  function watchAd(){
+      if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return;}
+      if(adInProgress) return;
+      adInProgress = true; adCredited=false; adStartTs=Date.now(); watchNow1.disabled=true;
+      showStatus("Ad loading... Please watch till the end.","info");
+
+      // SDK or simulated ad
+      if(typeof show_9789039 === "function"){
+          try{ show_9789039({onClose:(completed)=>{ if(completed) creditAdOnce(); }}); }catch{}
+      }
+      setTimeout(creditAdOnce,AD_MIN_MS); // auto credit after 15s
+  }
+  watchNow1.addEventListener('click',watchAd);
+
+  // ===== Signup =====
+  signupBtn.addEventListener('click',()=>{
+      if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+          state.dailySignupCount++; saveState(); updateUI();
+          showStatus("Sign-up completed!","success");
+      } else { showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error"); }
   });
-  document.getElementById(viewId).style.display='block';
 
-  ['navNativeHome','navReferral','navUwoln'].forEach(b=>{
-    document.getElementById(b).classList.remove('active');
+  // ===== Platform select =====
+  function selectPlatform(platform, btn){ selectedPlatform=platform; [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); updateUI();}
+  binanceBtn.addEventListener('click',()=>selectPlatform('Binance',binanceBtn));
+  bybitBtn.addEventListener('click',()=>selectPlatform('Bybit',bybitBtn));
+  paypalBtn.addEventListener('click',()=>selectPlatform('PayPal',paypalBtn));
+  uwolnBtn.addEventListener('click',()=>selectPlatform('Uwoln',uwolnBtn));
+
+  // ===== Withdraw =====
+  mainWithdrawBtn.addEventListener('click',()=>{
+      if(!selectedPlatform){showStatus("Please select a platform","error"); return;}
+      if(state.balanceInCents<WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;}
+      state.balanceInCents=0; saveState(); updateUI();
+      showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
   });
-  if(viewId==='native-home-view') navNativeHome.classList.add('active');
-  else if(viewId==='referral-view') navReferral.classList.add('active');
-  else if(viewId==='uwoln-view') navUwoln.classList.add('active');
-}
 
-navNativeHome.addEventListener('click',()=>showView('native-home-view'));
-navReferral.addEventListener('click',()=>showView('referral-view'));
-navUwoln.addEventListener('click',()=>showView('uwoln-view'));
-
-showView('native-home-view');
-updateUI();
+  // ===== Navigation =====
+  function showView(viewId){
+      ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
+      document.getElementById(viewId).style.display='block';
+      document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('active'));
+  }
+  navHome.addEventListener('click',()=>{ showView('home-view'); navHome.classList.add('active'); });
+  navReferral.addEventListener('click',()=>{ showView('referral-view'); navReferral.classList.add('active'); });
+  navWithdraw.addEventListener('click',()=>{ showView('withdraw-view'); navWithdraw.classList.add('active'); });
 });
 </script>
 </body>
