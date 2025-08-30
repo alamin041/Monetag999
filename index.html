@@ -177,27 +177,38 @@ function generateReferral(){referralLink.textContent="https://t.me/Monetag_alami
 function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
 setInterval(updateDateTime,1000); updateDateTime();
 
-// Watch Ad
 function watchAd() {
-    if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return;}
+    if(state.dailyAdCount >= DAILY_LIMIT){ 
+        showStatus("Daily ad limit reached","error"); 
+        return;
+    }
     showStatus("Loading Ad...","info");
-    if(typeof show_9789039 !== "function"){showStatus("SDK not loaded","error"); return;}
+
+    if(typeof show_9789039 !== "function"){ 
+        showStatus("SDK not loaded","error"); 
+        return;
+    }
+
+    // SDK এড চালানো
     show_9789039({
-      onClose: (completed)=>{
-        if(completed){
-          // SDK এড সম্পূর্ণ দেখার পর কাউন্ট যোগ হবে
-          state.totalAdCount++;
-          state.dailyAdCount++;
-          state.balanceInCents += AD_REWARD;
-          saveState(); updateUI();
-          showStatus("+0.02 USD added!","success");
-          if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-              signupNote.style.display='block';
-          }
-        } else {
-          showStatus("Ad not completed","error");
+        onClose: function(completed) {
+            // শুধুমাত্র এড সম্পূর্ণ হলে
+            if(completed) {
+                //  এড শেষ হওয়ার পরে কাউন্ট বাড়ানো
+                state.totalAdCount++;
+                state.dailyAdCount++;
+                state.balanceInCents += AD_REWARD;
+                saveState(); 
+                updateUI();
+                showStatus("+0.02 USD added!","success");
+
+                if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+                    signupNote.style.display='block';
+                }
+            } else {
+                showStatus("Ad not completed","error");
+            }
         }
-      }
     });
 }
 watchNow1.addEventListener('click', watchAd);
