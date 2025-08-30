@@ -101,7 +101,7 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
   </div>
 
   <div class="status-message" id="statusMessage"></div>
-</div>
+</div> <!-- container শেষ -->
 
 <footer class="footer-nav">
   <button class="nav-btn active" id="navHome"><span class="icon">🏠</span><span>Home</span></button>
@@ -140,7 +140,6 @@ document.addEventListener('DOMContentLoaded', function(){
   let selectedPlatform = null;
   let adInProgress = false;
   let adCredited = false;
-  let adStartTs = 0;
 
   function getToday(){return new Date().toISOString().split('T')[0];}
   function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
@@ -169,14 +168,16 @@ document.addEventListener('DOMContentLoaded', function(){
       adCountDisplay.textContent=state.totalAdCount;
       dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
       dailySignupCountDisplay.textContent=`${state.dailySignupCount} / 1`;
-
       [adCountDisplay,dailyAdCountDisplay,dailySignupCountDisplay].forEach(el=>{
           el.classList.add('animate');
           setTimeout(()=>el.classList.remove('animate'),600);
       });
-
-      signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
+      updateSignupUI();
       mainWithdrawBtn.disabled = (state.balanceInCents < WITHDRAW_THRESHOLD || !selectedPlatform);
+  }
+
+  function updateSignupUI() {
+      signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
       signupNote.style.display = (state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1) ? 'block' : 'none';
   }
 
@@ -198,9 +199,8 @@ document.addEventListener('DOMContentLoaded', function(){
   function watchAd(){
       if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return;}
       if(adInProgress) return;
-      adInProgress = true; adCredited=false; adStartTs=Date.now(); watchNow1.disabled=true;
+      adInProgress = true; adCredited=false; watchNow1.disabled=true;
       showStatus("Ad loading... Please watch till the end.","info");
-
       if(typeof show_9789039 === "function"){
           try{ show_9789039({onClose:(completed)=>{ if(completed) creditAdOnce(); }}); }catch{}
       }
@@ -209,46 +209,39 @@ document.addEventListener('DOMContentLoaded', function(){
   watchNow1.addEventListener('click',watchAd);
 
   // ===== Signup SDK Ad logic =====
-function updateSignupUI() {
-    // Sign-up button enabled only if 15 ads done & daily signup < 1
-    signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
-    signupNote.style.display = (state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1) ? 'block' : 'none';
-}
+  signupBtn.addEventListener('click', () => {
+      if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+          signupBtn.disabled = true;
+          showStatus("Sign-up Ad loading... Please watch till the end.","info");
 
-signupBtn.addEventListener('click', () => {
-    if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-        signupBtn.disabled = true; // Disable immediately when clicked
-        showStatus("Sign-up Ad loading... Please watch till the end.","info");
+          const completeSignup = () => {
+              state.dailySignupCount++;
+              saveState();
+              updateUI();
+              showStatus("Sign-up completed!","success");
+          };
 
-        const completeSignup = () => {
-            state.dailySignupCount++;
-            saveState();
-            updateUI();
-            updateSignupUI();
-            showStatus("Sign-up completed!","success");
-        };
+          if(typeof show_9789039 === "function"){
+              try{
+                  show_9789039({ onClose: (completed) => {
+                      if(completed){
+                          completeSignup();
+                      } else {
+                          signupBtn.disabled = false;
+                          showStatus("Sign-up Ad not completed. Try again.","error");
+                      }
+                  }});
+              } catch(e){
+                  setTimeout(completeSignup, AD_MIN_MS);
+              }
+          } else {
+              setTimeout(completeSignup, AD_MIN_MS);
+          }
 
-        if(typeof show_9789039 === "function"){
-            try{
-                show_9789039({ onClose: (completed) => {
-                    if(completed){
-                        completeSignup();
-                    } else {
-                        signupBtn.disabled = false; // Re-enable if Ad not completed
-                        showStatus("Sign-up Ad not completed. Try again.","error");
-                    }
-                }});
-            } catch(e){
-                setTimeout(completeSignup, AD_MIN_MS); // fallback
-            }
-        } else {
-            setTimeout(completeSignup, AD_MIN_MS); // simulate if SDK not present
-        }
-
-    } else {
-        showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
-    }
-});
+      } else {
+          showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
+      }
+  });
 
   // ===== Platform select =====
   function selectPlatform(platform, btn){
@@ -280,11 +273,11 @@ signupBtn.addEventListener('click', () => {
   navReferral.addEventListener('click',()=>{ showView('referral-view'); navReferral.classList.add('active'); });
   navWithdraw.addEventListener('click',()=>{ showView('withdraw-view'); navWithdraw.classList.add('active'); });
 
-  // ===== Auto-reset at 00:00 AM =====
+  // ===== Auto-reset at 2:10 AM =====
   function scheduleReset(){
       const now = new Date();
       let resetTime = new Date();
-      resetTime.setHours(00,00,0,0);
+      resetTime.setHours(2,10,0,0);
       if(now > resetTime) resetTime.setDate(resetTime.getDate()+1);
       const delay = resetTime - now;
       setTimeout(()=>{
