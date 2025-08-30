@@ -269,6 +269,61 @@ document.addEventListener('DOMContentLoaded', function(){
   navReferral.addEventListener('click',()=>{ showView('referral-view'); navReferral.classList.add('active'); });
   navWithdraw.addEventListener('click',()=>{ showView('withdraw-view'); navWithdraw.classList.add('active'); });
 });
+  <script>
+document.addEventListener("DOMContentLoaded", ()=>{
+
+   // ---- state ----
+   let state = JSON.parse(localStorage.getItem("appState")) || {
+       balance: 0,
+       dailyAdCount: 0,
+       dailySignupCount: 0,
+       lastAdDate: getToday()
+   };
+
+   function getToday(){
+       const d = new Date();
+       return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+   }
+
+   function saveState(){
+       localStorage.setItem("appState", JSON.stringify(state));
+   }
+
+   function updateUI(){
+       document.getElementById("balance").innerText = state.balance.toFixed(2);
+       document.getElementById("adCount").innerText = state.dailyAdCount;
+       document.getElementById("signupCount").innerText = state.dailySignupCount;
+   }
+
+   function showStatus(msg,type="info"){
+       const status = document.getElementById("status");
+       status.innerText = msg;
+       status.className = type;
+   }
+
+   // ====== তোমার অন্যান্য বোতাম/ফিচার এর কোড এখানে থাকবে ======
+
+   updateUI(); // প্রথমবার UI সেট করা হবে
+
+   // ===== 2:10 AM Reset System =====
+   setInterval(()=>{
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+
+      // রাত 2:10 এ reset হবে
+      if(hours === 2 && minutes === 10 && state.lastAdDate !== getToday()){
+          state.dailyAdCount = 0;
+          state.dailySignupCount = 0;
+          state.lastAdDate = getToday();
+          saveState();
+          updateUI();
+          showStatus("✅ Daily reset completed at 2:10 AM! New day started.","info");
+      }
+   }, 60000); // প্রতি 1 মিনিটে চেক করবে
+
+}); 
+</script>
 </script>
 </body>
 </html>
