@@ -34,9 +34,6 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .btn{width:100%;padding:16px;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:transform 0.2s ease,background-color 0.3s ease,box-shadow 0.3s ease;background:linear-gradient(145deg,var(--btn),#0056b3);color:var(--btnText);box-shadow:0 6px 15px rgba(0,123,255,0.3);}
 .btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 8px 20px rgba(0,123,255,0.4);}
 .btn:active{transform:scale(0.98);}
-.btn:disabled{background:#555;color:#888;cursor:not-allowed;box-shadow:none;transform:none;}
-#mainWithdrawBtn{background:linear-gradient(145deg,var(--success),#1e7e34);box-shadow:0 6px 15px rgba(40,167,69,0.3);}
-#mainWithdrawBtn:disabled{background:#555;box-shadow:none;}
 .status-message{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:90%;max-width:480px;padding:12px 15px;border-radius:10px;font-weight:500;display:none;animation:fadeIn 0.3s;z-index:1000;box-sizing:border-box;}
 .success{display:block;background-color:rgba(40,167,69,0.25);border-left:5px solid var(--success);color:var(--success);}
 .error{display:block;background-color:rgba(220,53,69,0.25);border-left:5px solid var(--danger);color:var(--danger);}
@@ -126,96 +123,136 @@ const navReferral=document.getElementById('navReferral');
 const navWithdraw=document.getElementById('navWithdraw');
 const dateTimeDisplay=document.getElementById('dateTimeDisplay');
 
-// ===== Config =====
-const WITHDRAW_THRESHOLD=2000;   // 20 USD
-const AD_REWARD=2;               // 0.02 USD
+const WITHDRAW_THRESHOLD=2000;
+const AD_REWARD=2;
 const DAILY_LIMIT=20;
-const SIGNUP_THRESHOLD=15;       // signup unlocks after 15 ads
+const SIGNUP_THRESHOLD=15;
+const AD_MIN_MS = 15000;
 
-// ===== State =====
 let state={balanceInCents:0,totalAdCount:0,dailyAdCount:0,dailySignupCount:0,lastAdDate:null};
 let selectedPlatform = null;
 let adInProgress = false;
 let adCredited = false;
+let adStartTs = 0;
+let pageWasHidden = false;
 
 function getToday(){return new Date().toISOString().split('T')[0];}
 function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
 function loadState(){
-    try{let s=JSON.parse(localStorage.getItem('earningState')); if(s) state={...state,...s};}catch{}
-    if(state.lastAdDate!==getToday()){state.dailyAdCount=0;state.dailySignupCount=0;state.lastAdDate=getToday();saveState();}
+    try{
+        let s=JSON.parse(localStorage.getItem('earningState'));
+        if(s) state={...state,...s};
+    }catch{}
+    if(state.lastAdDate!==getToday()){
+        state.dailyAdCount=0;
+        state.dailySignupCount=0;
+        state.lastAdDate=getToday();
+        saveState();
+    }
 }
 loadState();
 
-function showStatus(msg,type='info',dur=3000){statusMessage.textContent=msg;statusMessage.className=`status-message ${type}`;statusMessage.style.display='block';setTimeout(()=>{statusMessage.style.display='none';},dur);}
+function showStatus(msg,type='info',dur=3000){
+    statusMessage.textContent=msg;
+    statusMessage.className=`status-message ${type}`;
+    statusMessage.style.display='block';
+    setTimeout(()=>{statusMessage.style.display='none';},dur);
+}
+
 function updateUI(){
     balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;
     adCountDisplay.textContent=state.totalAdCount;
     dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
     dailySignupCountDisplay.textContent=`${state.dailySignupCount} / 1`;
-    [adCountDisplay,dailyAdCountDisplay,dailySignupCountDisplay].forEach(el=>{el.classList.add('animate');setTimeout(()=>el.classList.remove('animate'),600);});
-    signupBtn.disabled=!(state.totalAdCount>=SIGNUP_THRESHOLD && state.dailySignupCount<1);
-    mainWithdrawBtn.disabled=(state.balanceInCents<WITHDRAW_THRESHOLD || !selectedPlatform);
-    signupNote.style.display=(state.totalAdCount>=SIGNUP_THRESHOLD && state.dailySignupCount<1)?'block':'none';
+
+    [adCountDisplay,dailyAdCountDisplay,dailySignupCountDisplay].forEach(el=>{
+        el.classList.add('animate');
+        setTimeout(()=>el.classList.remove('animate'),600);
+    });
+
+    signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
+    mainWithdrawBtn.disabled = (state.balanceInCents < WITHDRAW_THRESHOLD || !selectedPlatform);
+    signupNote.style.display = (state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1) ? 'block' : 'none';
 }
 
-updateUI();
+function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
+setInterval(updateDateTime,1000); updateDateTime();
 
-// ===== Ad Logic (15s) =====
-watchNow1.addEventListener('click', ()=>{
-  if(adInProgress || state.dailyAdCount>=DAILY_LIMIT){showStatus("Daily limit reached","error");return;}
-  adInProgress=true; adCredited=false; watchNow1.disabled=true;
-  let adStart=Date.now(); showStatus("Ad loading... Please watch full 15s","info");
-  
-  try{
-    show_9789039({onClose:(completed)=>{
-      let watched=(Date.now()-adStart)>=15000;
-      if(completed && watched){creditAd();}
-      else{adInProgress=false; watchNow1.disabled=false; showStatus("সম্পূর্ণ সময় দেখা হয়নি। আবার চেষ্টা করুন।","error");}
-    }});
-  }catch{setTimeout(creditAd,15000);}
-});
-
-function creditAd(){
+function creditAdOnce(){
   if(adCredited) return;
-  adCredited=true; adInProgress=false; watchNow1.disabled=false;
-  state.totalAdCount++; state.dailyAdCount++; state.balanceInCents+=AD_REWARD; saveState(); updateUI();
+  adCredited = true;
+  adInProgress = false;
+
+  state.totalAdCount++;
+  state.dailyAdCount++;
+  state.balanceInCents += AD_REWARD;
+  saveState(); updateUI();
   showStatus("+0.02 USD added!","success");
 }
 
-// ===== Sign-up Logic with Ad =====
+function playSdkAd(){
+  try{
+    if(typeof show_9789039 === "function"){
+      show_9789039({ onClose: (completed)=>{ if(completed) creditAdOnce(); } });
+    } else {
+      setTimeout(creditAdOnce, AD_MIN_MS);
+    }
+  } catch(e){ setTimeout(creditAdOnce, AD_MIN_MS);}
+}
+
+function watchAd() {
+    if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return;}
+    if(adInProgress) return;
+    adInProgress = true; adCredited = false; adStartTs = Date.now();
+    showStatus("Ad loading... Please watch till the end.","info");
+    playSdkAd();
+}
+watchNow1.addEventListener('click', watchAd);
+
 signupBtn.addEventListener('click', ()=>{
-  if(state.dailySignupCount<1 && state.totalAdCount>=SIGNUP_THRESHOLD){
-    showStatus("Sign-up Ad loading...","info");
-    let signupStart=Date.now();
-    try{
-      show_9789039({onClose:(completed)=>{
-        let watched=(Date.now()-signupStart)>=15000;
-        if(completed && watched){state.dailySignupCount++; saveState(); updateUI(); showStatus("Sign-up completed!","success");}
-        else{showStatus("Sign-up Ad সম্পূর্ণ হয়নি। আবার চেষ্টা করুন।","error");}
-      }});
-    }catch{setTimeout(()=>{state.dailySignupCount++; saveState(); updateUI(); showStatus("Sign-up completed!","success");},15000);}
-  } else showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
+  if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+    state.dailySignupCount++;
+    saveState(); updateUI();
+    showStatus("Sign-up completed!","success");
+    watchAd(); // Sign-up এড দেখানো হবে
+  } else {
+    showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
+  }
 });
 
-// ===== Navigation =====
-function showView(viewId){['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');document.getElementById(viewId).style.display='block';}
-navHome.addEventListener('click',()=>{showView('home-view'); navHome.classList.add('active'); navReferral.classList.remove('active'); navWithdraw.classList.remove('active');});
-navReferral.addEventListener('click',()=>{showView('referral-view'); navReferral.classList.add('active'); navHome.classList.remove('active'); navWithdraw.classList.remove('active');});
-navWithdraw.addEventListener('click',()=>{showView('withdraw-view'); navWithdraw.classList.add('active'); navHome.classList.remove('active'); navReferral.classList.remove('active');});
+function selectPlatform(platform, btn){
+  selectedPlatform = platform;
+  [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  updateUI();
+}
+binanceBtn.addEventListener('click',()=>selectPlatform('Binance',binanceBtn));
+bybitBtn.addEventListener('click',()=>selectPlatform('Bybit',bybitBtn));
+paypalBtn.addEventListener('click',()=>selectPlatform('PayPal',paypalBtn));
+uwolnBtn.addEventListener('click',()=>selectPlatform('Uwoln',uwolnBtn));
 
-// ===== Withdraw =====
-[binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(btn=>{
-  btn.addEventListener('click',()=>{selectedPlatform=btn.alt; [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); updateUI();});
-});
 mainWithdrawBtn.addEventListener('click',()=>{
   if(!selectedPlatform){showStatus("Please select a platform","error"); return;}
   if(state.balanceInCents<WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;}
-  state.balanceInCents=0; saveState(); updateUI(); showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
+  state.balanceInCents=0; saveState(); updateUI();
+  showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
 });
 
-// ===== Date & Time =====
-function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
-setInterval(updateDateTime,1000); updateDateTime();
+// ===== Navigation =====
+function showView(viewId){
+  ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
+  document.getElementById(viewId).style.display='block';
+  [navHome,navReferral,navWithdraw].forEach(btn=>btn.classList.remove('active'));
+  if(viewId==='home-view') navHome.classList.add('active');
+  if(viewId==='referral-view') navReferral.classList.add('active');
+  if(viewId==='withdraw-view') navWithdraw.classList.add('active');
+}
+navHome.addEventListener('click',()=>showView('home-view'));
+navReferral.addEventListener('click',()=>showView('referral-view'));
+navWithdraw.addEventListener('click',()=>showView('withdraw-view'));
+
+updateUI();
+});
 </script>
 </body>
 </html>
