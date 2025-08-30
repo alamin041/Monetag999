@@ -206,8 +206,7 @@ signupBtn.addEventListener('click', ()=>{
   if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
     show_9789039({
       onClose:(completed)=>{
-        if(completed){
-          state.dailySignupCount++;
+        if(completed){state.dailySignupCount++;
           saveState(); updateUI();
           signupNote.style.display='none';
           showStatus("Sign-up completed!","success");
