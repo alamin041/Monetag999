@@ -23,10 +23,13 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .header p{color:#8a8a8a;font-size:14px;}
 .card{background:var(--card);padding:25px;border-radius:16px;margin-bottom:25px;box-shadow:0 8px 16px rgba(0,0,0,0.3);border:1px solid var(--border);}
 .card h2{margin:0 0 12px 0;font-size:16px;color:#8a8a8a;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
-.balance-amount{font-size:36px;font-weight:700;color:#fff;margin-bottom:10px;}
+.balance-amount{font-size:36px;font-weight:700;color:#fff;margin-bottom:10px;animation:balanceAnim 0.5s;}
+@keyframes balanceAnim{0%{transform:scale(0.8);}100%{transform:scale(1);}}
 .ad-info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;text-align:center;}
 .ad-info-item h3{font-size:20px;font-weight:600;margin:0 0 5px 0;color:#fff;}
 .ad-info-item p{font-size:14px;color:#8a8a8a;margin:0;}
+.ad-info-item h3.animate {animation: pulseCount 0.6s ease-in-out;}
+@keyframes pulseCount {0%{transform:scale(1);color:#fff;}50%{transform:scale(1.3);color:#00d4ff;}100%{transform:scale(1);color:#fff;}}
 .ad-buttons{display:flex;flex-direction:column;gap:15px;margin-bottom:25px;}
 .btn{width:100%;padding:16px;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:transform 0.2s ease,background-color 0.3s ease,box-shadow 0.3s ease;background:linear-gradient(145deg,var(--btn),#0056b3);color:var(--btnText);box-shadow:0 6px 15px rgba(0,123,255,0.3);}
 .btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 8px 20px rgba(0,123,255,0.4);}
@@ -43,13 +46,11 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .nav-btn.active{color:var(--btn);}
 .nav-btn:hover:not(.active){color:#fff;}
 .nav-btn .icon{width:28px;height:28px;margin-bottom:4px;}
-.highlight-circle{background:var(--accent);color:#fff;font-size:14px;font-weight:700;padding:12px 20px;border-radius:50px;margin-bottom:20px;display:inline-block;box-shadow:0 4px 8px rgba(255,59,63,0.3);}
-.date-time{margin-bottom:15px;font-size:14px;color:#00d4ff;font-weight:600;}
-.signup-note {margin-top:15px;padding:10px 15px;background:#ff3b3f;color:#fff;font-weight:600;border-radius:12px;display:none;}
-.payment-icons{display:flex;justify-content:space-around;margin-top:10px;}
-.payment-icons img{width:50px;height:50px;cursor:pointer;border-radius:8px;transition:transform 0.2s,box-shadow 0.2s;}
-.payment-icons img:hover{transform:scale(1.1);box-shadow:0 4px 12px rgba(0,0,0,0.4);}
-.payment-icons img.selected{border:2px solid #007bff;}
+.highlight-circle{background:var(--accent);color:#fff;font-size:14px;font-weight:700;padding:12px 20px;border-radius:50px;margin-bottom:20px;display:inline-block;box-shadow:0 4px 8px rgba(255,59,63,0.3);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.05);}100%{transform:scale(1);}}
+.date-time{margin-bottom:15px;font-size:14px;color:#00d4ff;font-weight:600;animation:pulseTime 1.5s infinite;}
+@keyframes pulseTime{0%{transform:scale(1);opacity:0.7;}50%{transform:scale(1.05);opacity:1;}100%{transform:scale(1);opacity:0.7;}}
+.signup-note {margin-top:15px;padding:10px 15px;background:#ff3b3f;color:#fff;font-weight:600;border-radius:12px;display:none;animation:pulse 1.5s infinite;}
 </style>
 </head>
 <body>
@@ -129,14 +130,15 @@ const dateTimeDisplay=document.getElementById('dateTimeDisplay');
 const WITHDRAW_THRESHOLD=2000;   // 20 USD
 const AD_REWARD=2;               // 0.02 USD
 const DAILY_LIMIT=20;
-const SIGNUP_THRESHOLD=15;
+const SIGNUP_THRESHOLD=15;       // signup unlocks after 15 ads
 
 // ===== State =====
 let state={balanceInCents:0,totalAdCount:0,dailyAdCount:0,dailySignupCount:0,lastAdDate:null};
 let selectedPlatform = null;
 let adInProgress = false;
+let adCredited = false;
 
-// ===== Load/Save State =====
+// ===== Helpers =====
 function getToday(){return new Date().toISOString().split('T')[0];}
 function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
 function loadState(){
@@ -153,90 +155,108 @@ function loadState(){
 }
 loadState();
 
-// ===== UI =====
 function showStatus(msg,type='info',dur=3000){
     statusMessage.textContent=msg;
     statusMessage.className=`status-message ${type}`;
     statusMessage.style.display='block';
     setTimeout(()=>{statusMessage.style.display='none';},dur);
 }
+
 function updateUI(){
     balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;
     adCountDisplay.textContent=state.totalAdCount;
     dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
     dailySignupCountDisplay.textContent=`${state.dailySignupCount} / 1`;
+
     signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
     signupNote.style.display = (state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1) ? 'block' : 'none';
+    mainWithdrawBtn.disabled = (state.balanceInCents < WITHDRAW_THRESHOLD || !selectedPlatform);
 }
 
-// ===== Date Time =====
 function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
 setInterval(updateDateTime,1000); updateDateTime();
 
-// ===== Ad Logic =====
 function creditAdOnce(){
-  if(adInProgress){
+    if(adCredited) return;
+    adCredited = true;
     adInProgress = false;
+    watchNow1.disabled = false;
+
     state.totalAdCount++;
     state.dailyAdCount++;
     state.balanceInCents += AD_REWARD;
     saveState(); updateUI();
     showStatus("+0.02 USD added!","success");
-  }
 }
-function playSdkAd(callback){
-    if(typeof show_9789039 === "function"){
-        show_9789039({ onClose: (completed)=>{ if(completed) callback(); } });
-    } else { setTimeout(callback,2000); }
-}
-watchNow1.addEventListener('click',()=>{
-    if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return; }
-    if(adInProgress) return;
+
+// ===== Watch Ad =====
+watchNow1.addEventListener('click', ()=>{
+    if(adInProgress){ showStatus("Ad already in progress","error"); return;}
+    if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return;}
+
     adInProgress = true;
+    adCredited = false;
+    watchNow1.disabled = true;
     showStatus("Ad loading... Please watch till the end.","info");
-    playSdkAd(creditAdOnce);
+
+    try{
+        show_9789039({
+            onClose: function(completed){
+                if(completed) creditAdOnce();
+                else {
+                    adInProgress = false;
+                    watchNow1.disabled = false;
+                    showStatus("পুরো সময় দেখা হয়নি। আবার চেষ্টা করুন।","error");
+                }
+            }
+        });
+    }catch(e){
+        // fallback: credit after 15 sec if SDK fails
+        setTimeout(creditAdOnce,15000);
+    }
 });
 
-// ===== Sign-up Logic =====
+// ===== Sign-up =====
 signupBtn.addEventListener('click', ()=>{
-  if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-    adInProgress = true;
-    showStatus("Sign-up Ad loading...","info");
-    playSdkAd(()=>{
+    if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
         state.dailySignupCount++;
         saveState(); updateUI();
         showStatus("Sign-up completed!","success");
-        adInProgress = false;
-    });
-  }
+    } else {
+        showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
+    }
 });
 
-// ===== Withdraw Platform =====
+// ===== Platform select =====
 function selectPlatform(platform, btn){
-  selectedPlatform = platform;
-  [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
+    selectedPlatform = platform;
+    [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected'));
+    btn.classList.add('selected');
+    updateUI();
 }
 binanceBtn.addEventListener('click',()=>selectPlatform('Binance',binanceBtn));
 bybitBtn.addEventListener('click',()=>selectPlatform('Bybit',bybitBtn));
 paypalBtn.addEventListener('click',()=>selectPlatform('PayPal',paypalBtn));
 uwolnBtn.addEventListener('click',()=>selectPlatform('Uwoln',uwolnBtn));
+
+// ===== Withdraw =====
 mainWithdrawBtn.addEventListener('click',()=>{
-  if(!selectedPlatform){showStatus("Please select a platform","error"); return;}
-  if(state.balanceInCents<WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;}
-  state.balanceInCents=0; saveState(); updateUI();
-  showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
+    if(!selectedPlatform){showStatus("Please select a platform","error"); return;}
+    if(state.balanceInCents<WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;}
+    state.balanceInCents=0; saveState(); updateUI();
+    showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
 });
 
 // ===== Navigation =====
 function showView(viewId){
-  ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
-  document.getElementById(viewId).style.display='block';
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  if(viewId==='home-view') navHome.classList.add('active');
-  if(viewId==='referral-view') navReferral.classList.add('active');
-  if(viewId==='withdraw-view') navWithdraw.classList.add('active');
+    ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
+    document.getElementById(viewId).style.display='block';
+    [navHome,navReferral,navWithdraw].forEach(b=>b.classList.remove('active'));
+    if(viewId==='home-view') navHome.classList.add('active');
+    if(viewId==='referral-view') navReferral.classList.add('active');
+    if(viewId==='withdraw-view') navWithdraw.classList.add('active');
 }
+
 navHome.addEventListener('click',()=>showView('home-view'));
 navReferral.addEventListener('click',()=>showView('referral-view'));
 navWithdraw.addEventListener('click',()=>showView('withdraw-view'));
