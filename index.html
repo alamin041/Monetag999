@@ -176,47 +176,61 @@ function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${n
 setInterval(updateDateTime,1000); updateDateTime();
 
 // Watch Ad
+// Watch Ad with SDK completion check
 function watchAd() {
-    if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return;}
+    if(state.dailyAdCount >= DAILY_LIMIT){
+        showStatus("Daily ad limit reached","error");
+        return;
+    }
     showStatus("Loading Ad...","info");
-    if(typeof show_9789039 !== "function"){showStatus("SDK not loaded","error"); return;}
+
+    if(typeof show_9789039 !== "function"){
+        showStatus("SDK not loaded","error");
+        return;
+    }
+
     show_9789039({
-      onClose: (completed)=>{
-        if(completed){
-          state.totalAdCount++;
-          state.dailyAdCount++;
-          state.balanceInCents += AD_REWARD;
-          saveState(); updateUI();
-          showStatus("+0.02 USD added!","success");
-          if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-              signupNote.style.display='block';
-          }
-        } else {
-          showStatus("Ad not completed","error");
+        onClose: (completed)=>{
+            // শুধু যখন এড সম্পূর্ণ দেখানো হয়
+            if(completed){
+                state.totalAdCount++;
+                state.dailyAdCount++;
+                state.balanceInCents += AD_REWARD;
+                saveState();
+                updateUI();
+                showStatus("+0.02 USD added!","success");
+
+                // ১৫ এড হলে Sign-up চালু হবে
+                if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+                    signupNote.style.display='block';
+                    signupBtn.disabled = false;
+                }
+            } else {
+                showStatus("Ad not completed","error");
+            }
         }
-      }
     });
 }
 watchNow1.addEventListener('click', watchAd);
 
 // Sign-up
 signupBtn.addEventListener('click', ()=>{
-  if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-    show_9789039({
-      onClose:(completed)=>{
-        if(completed){
-          state.dailySignupCount++;
-          saveState(); updateUI();
-          signupNote.style.display='none';
-          showStatus("Sign-up completed!","success");
-        } else {
-          showStatus("Sign-up not completed, please click Continue","error");
-        }
-      }
-    });
-  }
+    if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+        show_9789039({
+            onClose: (completed)=>{
+                if(completed){
+                    state.dailySignupCount++;
+                    saveState();
+                    updateUI();
+                    signupNote.style.display='none';
+                    showStatus("Sign-up completed!","success");
+                } else {
+                    showStatus("Sign-up not completed, please click Continue","error");
+                }
+            }
+        });
+    }
 });
-
 // Platform select
 function selectPlatform(platform, btn){
   selectedPlatform = platform;
