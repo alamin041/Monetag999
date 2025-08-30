@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Earning Platform</title>
 
-<!-- Ad SDK + Telegram Web App (যদি লাগবে) -->
 <script src="//libtl.com/sdk.js" data-zone="9789039" data-sdk="show_9789039"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -112,76 +111,64 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-  // ===== DOM elements =====
-  const balanceDisplay = document.getElementById('balanceDisplay');
-  const adCountDisplay = document.getElementById('adCountDisplay');
-  const dailyAdCountDisplay = document.getElementById('dailyAdCountDisplay');
-  const dailySignupCountDisplay = document.getElementById('dailySignupCountDisplay');
-  const watchNow1 = document.getElementById('watchNow1');
-  const signupBtn = document.getElementById('signupBtn');
-  const signupNote = document.getElementById('signupNote');
-  const mainWithdrawBtn = document.getElementById('mainWithdrawBtn');
-  const referralLink = document.getElementById('referralLink');
-  const statusMessage = document.getElementById('statusMessage');
-  const binanceBtn = document.getElementById('binanceBtn');
-  const bybitBtn = document.getElementById('bybitBtn');
-  const paypalBtn = document.getElementById('paypalBtn');
-  const uwolnBtn = document.getElementById('uwolnBtn');
-  const navHome = document.getElementById('navHome');
-  const navReferral = document.getElementById('navReferral');
-  const navWithdraw = document.getElementById('navWithdraw');
-  const dateTimeDisplay = document.getElementById('dateTimeDisplay');
+  const balanceDisplay=document.getElementById('balanceDisplay');
+  const adCountDisplay=document.getElementById('adCountDisplay');
+  const dailyAdCountDisplay=document.getElementById('dailyAdCountDisplay');
+  const dailySignupCountDisplay=document.getElementById('dailySignupCountDisplay');
+  const watchNow1=document.getElementById('watchNow1');
+  const signupBtn=document.getElementById('signupBtn');
+  const signupNote=document.getElementById('signupNote');
+  const mainWithdrawBtn=document.getElementById('mainWithdrawBtn');
+  const referralLink=document.getElementById('referralLink');
+  const statusMessage=document.getElementById('statusMessage');
+  const binanceBtn=document.getElementById('binanceBtn');
+  const bybitBtn=document.getElementById('bybitBtn');
+  const paypalBtn=document.getElementById('paypalBtn');
+  const uwolnBtn=document.getElementById('uwolnBtn');
+  const navHome=document.getElementById('navHome');
+  const navReferral=document.getElementById('navReferral');
+  const navWithdraw=document.getElementById('navWithdraw');
+  const dateTimeDisplay=document.getElementById('dateTimeDisplay');
 
-  // ===== Config =====
-  const WITHDRAW_THRESHOLD = 2000; // cents -> 2000 = $20.00
-  const AD_REWARD = 2; // cents -> 2 = $0.02
-  const DAILY_LIMIT = 20;
-  const SIGNUP_THRESHOLD = 15;
-  const AD_MIN_MS = 15000;
+  const WITHDRAW_THRESHOLD=2000; 
+  const AD_REWARD=2; 
+  const DAILY_LIMIT=20;
+  const SIGNUP_THRESHOLD=15; 
+  const AD_MIN_MS = 15000; 
 
-  // ===== State =====
-  let state = { balanceInCents:0, totalAdCount:0, dailyAdCount:0, dailySignupCount:0, lastAdDate: null };
+  let state={balanceInCents:0,totalAdCount:0,dailyAdCount:0,dailySignupCount:0,lastAdDate:null};
   let selectedPlatform = null;
   let adInProgress = false;
   let adCredited = false;
   let adStartTs = 0;
 
-  // ===== Helpers =====
-  function getToday(){
-      const d = new Date();
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const dd = String(d.getDate()).padStart(2,'0');
-      return `${yyyy}-${mm}-${dd}`; // local date string
-  }
-
-  function saveState(){ localStorage.setItem('earningState', JSON.stringify(state)); }
+  function getToday(){return new Date().toISOString().split('T')[0];}
+  function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
   function loadState(){
       try{
-          const s = JSON.parse(localStorage.getItem('earningState'));
-          if(s) state = {...state, ...s};
-      }catch(e){}
-      if(!state.lastAdDate) state.lastAdDate = getToday();
-      if(state.lastAdDate !== getToday()){
-          state.dailyAdCount = 0;
-          state.dailySignupCount = 0;
-          state.lastAdDate = getToday();
+          let s=JSON.parse(localStorage.getItem('earningState'));
+          if(s) state={...state,...s};
+      }catch{}
+      if(state.lastAdDate!==getToday()){
+          state.dailyAdCount=0;
+          state.dailySignupCount=0;
+          state.lastAdDate=getToday();
           saveState();
       }
   }
 
-  function showStatus(msg, type='info', dur=3000){
-      statusMessage.textContent = msg;
-      statusMessage.className = `status-message ${type}`;
-      statusMessage.style.display = 'block';
-      setTimeout(()=>{ statusMessage.style.display = 'none'; }, dur);
+  function showStatus(msg,type='info',dur=3000){
+      statusMessage.textContent=msg;
+      statusMessage.className=`status-message ${type}`;
+      statusMessage.style.display='block';
+      setTimeout(()=>{statusMessage.style.display='none';},dur);
   }
 
   function updateUI(){
-      balanceDisplay.textContent = `USDT ${(state.balanceInCents/100).toFixed(2)}`;
-      adCountDisplay.textContent = state.totalAdCount;
-      dailyAdCountDisplay.textContent = `${state.dailyAdCount} / ${DAILY_LIMIT}`;
-      dailySignupCountDisplay.textContent = `${state.dailySignupCount} / 1`;
+      balanceDisplay.textContent=`USDT ${(state.balanceInCents/100).toFixed(2)}`;
+      adCountDisplay.textContent=state.totalAdCount;
+      dailyAdCountDisplay.textContent=`${state.dailyAdCount} / ${DAILY_LIMIT}`;
+      dailySignupCountDisplay.textContent=`${state.dailySignupCount} / 1`;
 
       [adCountDisplay,dailyAdCountDisplay,dailySignupCountDisplay].forEach(el=>{
           el.classList.add('animate');
@@ -193,47 +180,33 @@ document.addEventListener('DOMContentLoaded', function(){
       signupNote.style.display = (state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1) ? 'block' : 'none';
   }
 
-  function generateReferral(){ referralLink.textContent = "https://t.me/Monetag_alamin_bot"; }
-  function updateDateTime(){ const now = new Date(); dateTimeDisplay.textContent = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`; }
-
-  // Init
-  setInterval(updateDateTime, 1000);
-  updateDateTime();
-  loadState();
-  updateUI();
-  generateReferral();
+  function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
+  function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
+  setInterval(updateDateTime,1000); updateDateTime();
+  loadState(); updateUI(); generateReferral();
 
   // ===== Ad logic =====
   function creditAdOnce(){
       if(adCredited) return;
-      adCredited = true;
-      adInProgress = false;
-      watchNow1.disabled = false;
-      state.totalAdCount++;
-      state.dailyAdCount++;
-      state.balanceInCents += AD_REWARD;
-      saveState();
-      updateUI();
+      adCredited=true; adInProgress=false;
+      watchNow1.disabled=false;
+      state.totalAdCount++; state.dailyAdCount++; state.balanceInCents += AD_REWARD;
+      saveState(); updateUI();
       showStatus("+0.02 USD added!","success");
   }
 
   function watchAd(){
-      if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return; }
+      if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return;}
       if(adInProgress) return;
-      adInProgress = true; adCredited = false; adStartTs = Date.now(); watchNow1.disabled = true;
+      adInProgress = true; adCredited=false; adStartTs=Date.now(); watchNow1.disabled=true;
       showStatus("Ad loading... Please watch till the end.","info");
 
       if(typeof show_9789039 === "function"){
-          try{
-              show_9789039({ onClose: (completed) => { if(completed) creditAdOnce(); else { /* if SDK returns false, you may want fallback */ } }});
-          }catch(e){
-              // SDK call error -> fallback to simulate credit after AD_MIN_MS
-          }
+          try{ show_9789039({onClose:(completed)=>{ if(completed) creditAdOnce(); }}); }catch{}
       }
-      // fallback to ensure credit if SDK doesn't call completion
-      setTimeout(creditAdOnce, AD_MIN_MS);
+      setTimeout(creditAdOnce,AD_MIN_MS); 
   }
-  watchNow1.addEventListener('click', watchAd);
+  watchNow1.addEventListener('click',watchAd);
 
   // ===== Signup SDK Ad logic =====
   signupBtn.addEventListener('click', () => {
@@ -253,7 +226,6 @@ document.addEventListener('DOMContentLoaded', function(){
                       }
                   }});
               } catch(e){
-                  // fallback if SDK throws
                   setTimeout(() => {
                       state.dailySignupCount++;
                       saveState(); updateUI();
@@ -261,7 +233,6 @@ document.addEventListener('DOMContentLoaded', function(){
                   }, AD_MIN_MS);
               }
           } else {
-              // no SDK -> simulate
               setTimeout(() => {
                   state.dailySignupCount++;
                   saveState(); updateUI();
@@ -280,49 +251,46 @@ document.addEventListener('DOMContentLoaded', function(){
       btn.classList.add('selected');
       updateUI();
   }
-  binanceBtn.addEventListener('click', ()=>selectPlatform('Binance', binanceBtn));
-  bybitBtn.addEventListener('click', ()=>selectPlatform('Bybit', bybitBtn));
-  paypalBtn.addEventListener('click', ()=>selectPlatform('PayPal', paypalBtn));
-  uwolnBtn.addEventListener('click', ()=>selectPlatform('Uwoln', uwolnBtn));
+  binanceBtn.addEventListener('click',()=>selectPlatform('Binance',binanceBtn));
+  bybitBtn.addEventListener('click',()=>selectPlatform('Bybit',bybitBtn));
+  paypalBtn.addEventListener('click',()=>selectPlatform('PayPal',paypalBtn));
+  uwolnBtn.addEventListener('click',()=>selectPlatform('Uwoln',uwolnBtn));
 
   // ===== Withdraw =====
-  mainWithdrawBtn.addEventListener('click', ()=>{
-      if(!selectedPlatform){ showStatus("Please select a platform","error"); return; }
-      if(state.balanceInCents < WITHDRAW_THRESHOLD){ showStatus("Insufficient balance","error"); return; }
-      // perform withdraw request (here just reset balance)
-      state.balanceInCents = 0;
-      saveState(); updateUI();
+  mainWithdrawBtn.addEventListener('click',()=>{
+      if(!selectedPlatform){showStatus("Please select a platform","error"); return;}
+      if(state.balanceInCents<WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;}
+      state.balanceInCents=0; saveState(); updateUI();
       showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
   });
 
   // ===== Navigation =====
   function showView(viewId){
-      ['home-view','referral-view','withdraw-view'].forEach(v => document.getElementById(v).style.display = 'none');
-      document.getElementById(viewId).style.display = 'block';
-      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
+      document.getElementById(viewId).style.display='block';
+      document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('active'));
   }
-  navHome.addEventListener('click', ()=>{ showView('home-view'); navHome.classList.add('active'); });
-  navReferral.addEventListener('click', ()=>{ showView('referral-view'); navReferral.classList.add('active'); });
-  navWithdraw.addEventListener('click', ()=>{ showView('withdraw-view'); navWithdraw.classList.add('active'); });
+  navHome.addEventListener('click',()=>{ showView('home-view'); navHome.classList.add('active'); });
+  navReferral.addEventListener('click',()=>{ showView('referral-view'); navReferral.classList.add('active'); });
+  navWithdraw.addEventListener('click',()=>{ showView('withdraw-view'); navWithdraw.classList.add('active'); });
 
-  // ===== 2:10 AM Reset System =====
-  // Note: এই reset কাজ করবে **শুধু** তখনই যখন ইউজার অ্যাপ/পেজ ওপেন করে থাকবে। 
-  setInterval(()=>{
-     const now = new Date();
-     const hours = now.getHours();
-     const minutes = now.getMinutes();
-
-     // রাত 2:10 AM এ reset হবে (তারপরেও একটি দিনের মধ্যে একবারই হবে কারণ আমরা lastAdDate চেক করি)
-     if(hours === 2 && minutes === 10 && state.lastAdDate !== getToday()){
-         state.dailyAdCount = 0;
-         state.dailySignupCount = 0;
-         state.lastAdDate = getToday();
-         saveState();
-         updateUI();
-         showStatus("✅ Daily reset completed at 2:10 AM! New day started.","info");
-     }
-  }, 60000); // প্রতি 1 মিনিটে চেক
-
+  // ===== Auto-reset at 00:00 AM =====
+  function scheduleReset(){
+      const now = new Date();
+      let resetTime = new Date();
+      resetTime.setHours(00,00,0,0);
+      if(now > resetTime) resetTime.setDate(resetTime.getDate()+1);
+      const delay = resetTime - now;
+      setTimeout(()=>{
+          state.dailyAdCount = 0;
+          state.dailySignupCount = 0;
+          saveState();
+          updateUI();
+          showStatus("Daily reset complete!","info");
+          scheduleReset();
+      }, delay);
+  }
+  scheduleReset();
 });
 </script>
 </body>
