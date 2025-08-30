@@ -209,40 +209,46 @@ document.addEventListener('DOMContentLoaded', function(){
   watchNow1.addEventListener('click',watchAd);
 
   // ===== Signup SDK Ad logic =====
-  signupBtn.addEventListener('click', () => {
-      if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-          signupBtn.disabled = true;
-          showStatus("Sign-up Ad loading... Please watch till the end.","info");
-          if(typeof show_9789039 === "function"){
-              try{
-                  show_9789039({ onClose: (completed) => {
-                      if(completed){
-                          state.dailySignupCount++;
-                          saveState(); updateUI();
-                          showStatus("Sign-up completed!","success");
-                      } else {
-                          signupBtn.disabled = false;
-                          showStatus("Sign-up Ad not completed. Try again.","error");
-                      }
-                  }});
-              } catch(e){
-                  setTimeout(() => {
-                      state.dailySignupCount++;
-                      saveState(); updateUI();
-                      showStatus("Sign-up completed (fallback)!","success");
-                  }, AD_MIN_MS);
-              }
-          } else {
-              setTimeout(() => {
-                  state.dailySignupCount++;
-                  saveState(); updateUI();
-                  showStatus("Sign-up completed (simulated)!","success");
-              }, AD_MIN_MS);
-          }
-      } else {
-          showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
-      }
-  });
+function updateSignupUI() {
+    // Sign-up button enabled only if 15 ads done & daily signup < 1
+    signupBtn.disabled = !(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1);
+    signupNote.style.display = (state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1) ? 'block' : 'none';
+}
+
+signupBtn.addEventListener('click', () => {
+    if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+        signupBtn.disabled = true; // Disable immediately when clicked
+        showStatus("Sign-up Ad loading... Please watch till the end.","info");
+
+        const completeSignup = () => {
+            state.dailySignupCount++;
+            saveState();
+            updateUI();
+            updateSignupUI();
+            showStatus("Sign-up completed!","success");
+        };
+
+        if(typeof show_9789039 === "function"){
+            try{
+                show_9789039({ onClose: (completed) => {
+                    if(completed){
+                        completeSignup();
+                    } else {
+                        signupBtn.disabled = false; // Re-enable if Ad not completed
+                        showStatus("Sign-up Ad not completed. Try again.","error");
+                    }
+                }});
+            } catch(e){
+                setTimeout(completeSignup, AD_MIN_MS); // fallback
+            }
+        } else {
+            setTimeout(completeSignup, AD_MIN_MS); // simulate if SDK not present
+        }
+
+    } else {
+        showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
+    }
+});
 
   // ===== Platform select =====
   function selectPlatform(platform, btn){
