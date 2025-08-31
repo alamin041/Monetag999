@@ -244,6 +244,16 @@ document.addEventListener('DOMContentLoaded', function(){
   watchNow1.addEventListener('click',watchAd);
 
 // ===== Sign-up Logic =====
+function enableSignupIfEligible(){
+    if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+        signupBtn.disabled = false;
+        signupNote.style.display = 'block';
+    } else {
+        signupBtn.disabled = true;
+        signupNote.style.display = 'none';
+    }
+}
+
 signupBtn.addEventListener('click', () => {
     if(signupBtn.disabled) return; // Safety check
 
@@ -254,9 +264,10 @@ signupBtn.addEventListener('click', () => {
     enableSignupIfEligible();
 
     // পুরনো নোটিশ hide
-    if(signupNote){
-        signupNote.style.display = 'none';
-    }
+    signupNote.style.display = 'none';
+
+    // নতুন নোটিশ দেখাও
+    showStatus("আজকের Task সম্পূর্ণ হয়েছে ✅", "success", 5000);
 
     // বাটন ডিসেবল
     signupBtn.disabled = true;
@@ -265,11 +276,20 @@ signupBtn.addEventListener('click', () => {
     if(typeof show_9789039 === "function"){
         show_9789039({
             onClose: function(completed){
-                console.log(completed ? "Sign-up SDK completed" : "Sign-up SDK not completed");
+                if(completed){
+                    // SDK এড শেষ হলে আর কিছু করার দরকার নেই
+                    console.log("Sign-up SDK completed");
+                } else {
+                    // যদি ইউজার এড শেষ না করে, fallback
+                    console.log("Sign-up SDK not completed");
+                }
             }
         });
     }
 });
+
+// Initial load
+enableSignupIfEligible();
 
 // ===== ভিউ পরিবর্তনের সময় =====
 function showView(viewId) {
