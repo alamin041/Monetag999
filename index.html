@@ -200,28 +200,53 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   watchNow1.addEventListener('click',watchAd);
 
-  // ===== Signup logic =====
-  signupBtn.addEventListener('click', () => {
-      if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-          signupBtn.disabled = true;
-          showStatus("Sign-up Ad loading... Please watch till the end.","info");
-          if(typeof show_9789039 === "function"){
-              try{
-                  show_9789039({ onClose: (completed) => {
-                      if(completed){
-                          state.dailySignupCount++;
-                          saveState(); updateUI();
-                          showStatus("Sign-up completed!","success");
-                      } else {
-                          showStatus("Sign-up Ad not completed. You cannot retry today.","error");
-                      }
-                  }});
-              } catch(e){
-                  setTimeout(() => { state.dailySignupCount++; saveState(); updateUI(); showStatus("Sign-up completed (fallback)!","success"); }, AD_MIN_MS);
-              }
-          } else { setTimeout(() => { state.dailySignupCount++; saveState(); updateUI(); showStatus("Sign-up completed (simulated)!","success"); }, AD_MIN_MS); }
-      } else { showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error"); }
-  });
+  // ===== Signup SDK Ad logic =====
+signupBtn.addEventListener('click', () => {
+    // শুধু তখনই চলবে যখন ১৫টি এড সম্পূর্ণ এবং আজকের Sign-up হয়নি
+    if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+        signupBtn.disabled = true;
+        showStatus("Sign-up Ad loading... Please watch till the end.", "info");
+
+        if(typeof show_9789039 === "function"){
+            try {
+                show_9789039({
+                    onClose: (completed) => {
+                        if(completed){
+                            state.dailySignupCount++;
+                            saveState();
+                            updateUI();
+                            showStatus("Sign-up completed!","success");
+                        } else {
+                            // যদি এড দেখা না হয়, ইউজার আর ক্লিক করতে পারবে না আজ
+                            state.dailySignupCount++;
+                            saveState();
+                            updateUI();
+                            showStatus("Sign-up Ad not completed. You cannot retry today.","error");
+                        }
+                    }
+                });
+            } catch(e){
+                // SDK fail হলে fallback
+                setTimeout(() => {
+                    state.dailySignupCount++;
+                    saveState();
+                    updateUI();
+                    showStatus("Sign-up completed (fallback)!","success");
+                }, AD_MIN_MS);
+            }
+        } else {
+            // SDK না থাকলে simulated
+            setTimeout(() => {
+                state.dailySignupCount++;
+                saveState();
+                updateUI();
+                showStatus("Sign-up completed (simulated)!","success");
+            }, AD_MIN_MS);
+        }
+    } else {
+        showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
+    }
+});
 
   // ===== Platform select =====
   function selectPlatform(platform, btn){ selectedPlatform=platform; [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); updateUI();}
