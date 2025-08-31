@@ -143,7 +143,9 @@ document.addEventListener('DOMContentLoaded', function(){
   let adStartTs = 0;
 
   function getToday(){return new Date().toISOString().split('T')[0];}
+
   function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
+
   function loadState(){
       try{
           let s=JSON.parse(localStorage.getItem('earningState'));
@@ -177,7 +179,13 @@ document.addEventListener('DOMContentLoaded', function(){
 
       mainWithdrawBtn.disabled = (state.balanceInCents < WITHDRAW_THRESHOLD || !selectedPlatform);
 
-      // Sign-up বাটন আপডেট
+      updateSignupButton();
+
+      if(state.dailyAdCount >= DAILY_LIMIT) watchNow1.disabled = true;
+      else watchNow1.disabled = false;
+  }
+
+  function updateSignupButton(){
       if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
           signupBtn.disabled = false;
           signupNote.style.display = 'block';
@@ -185,18 +193,16 @@ document.addEventListener('DOMContentLoaded', function(){
           signupBtn.disabled = true;
           signupNote.style.display = 'none';
       }
-
-      // Watch Now ডিজেবল হলে
-      if(state.dailyAdCount >= DAILY_LIMIT) watchNow1.disabled = true;
-      else watchNow1.disabled = false;
   }
 
   function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
+
   function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
   setInterval(updateDateTime,1000); updateDateTime();
+
   loadState(); updateUI(); generateReferral();
 
-  // ===== Ad logic =====
+  // ===== Ad Logic =====
   function creditAdOnce(){
       if(adCredited) return;
       adCredited=true; adInProgress=false;
@@ -218,6 +224,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if(typeof show_9789039 === "function"){
           try{ 
               show_9789039({onClose:(completed)=>{
+                  adInProgress = false;
                   if(completed) creditAdOnce(); 
                   if(state.dailyAdCount >= DAILY_LIMIT) watchNow1.disabled=true;
                   else watchNow1.disabled=false;
@@ -233,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   watchNow1.addEventListener('click',watchAd);
 
-  // ===== Signup Button Logic =====
+  // ===== Signup Logic =====
   signupBtn.addEventListener('click', () => {
       if(state.totalAdCount < SIGNUP_THRESHOLD){
           showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।", "error");
@@ -247,42 +254,59 @@ document.addEventListener('DOMContentLoaded', function(){
       signupBtn.disabled = true;
       showStatus("Sign-up Ad loading... Please watch till the end.", "info");
 
+      adInProgress = true; 
+      adCredited = false; 
+      adStartTs = Date.now();
+
       if(typeof show_9789039 === "function"){
           try {
               show_9789039({
                   onClose: (completed) => {
+                      adInProgress = false;
                       if(completed){
                           state.dailySignupCount++;
                           saveState();
                           updateUI();
+                          updateSignupButton();
                           showStatus("Sign-up completed!","success");
                       } else {
                           showStatus("Sign-up Ad not completed. You cannot retry today.","error");
+                          updateSignupButton();
                       }
                   }
               });
           } catch(e){
               setTimeout(() => {
                   state.dailySignupCount++;
+                  adInProgress = false;
                   saveState();
                   updateUI();
+                  updateSignupButton();
                   showStatus("Sign-up completed (fallback)!","success");
               }, AD_MIN_MS);
           }
       } else {
           setTimeout(() => {
               state.dailySignupCount++;
+              adInProgress = false;
               saveState();
               updateUI();
+              updateSignupButton();
               showStatus("Sign-up completed (simulated)!","success");
           }, AD_MIN_MS);
       }
   });
 
-  // ===== Platform select =====
-  function selectPlatform(platform, btn){ selectedPlatform=platform; [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); updateUI();}
+  // ===== Platform Selection =====
+  function selectPlatform(platform, btn){
+      selectedPlatform=platform; 
+      [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected')); 
+      btn.classList.add('selected'); 
+      updateUI();
+  }
   binanceBtn.addEventListener('click',()=>selectPlatform('Binance',binanceBtn));
-  bybitBtn.addEventListener('click',()=>selectPlatform('Bybit',paypalBtn));
+  bybitBtn.addEventListener('click',()=>selectPlatform('Bybit',bybitBtn));
+  paypalBtn.addEventListener('click',()=>selectPlatform('PayPal',paypalBtn));
   uwolnBtn.addEventListener('click',()=>selectPlatform('Uwoln',uwolnBtn));
 
   // ===== Withdraw =====
@@ -313,13 +337,13 @@ document.addEventListener('DOMContentLoaded', function(){
       setTimeout(()=>{
           state.dailyAdCount = 0;
           state.dailySignupCount = 0;
-          saveState(); updateUI();
+          saveState(); 
+          updateUI();
           showStatus("Daily reset complete!","info");
           scheduleReset();
       }, delay);
   }
   scheduleReset();
-
 });
 </script>
 </body>
