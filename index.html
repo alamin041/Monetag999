@@ -13,14 +13,23 @@
   --bg:#121212; --text:#e0e0e0; --btn:#007bff; --btnText:#fff;
   --card:#1e1e1e; --border:#333; --success:#28a745; --danger:#dc3545; --accent:#ff3b3f;
 }
-body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;background:var(--bg);color:var(--text);display:flex;flex-direction:column;align-items:center;min-height:100vh;text-align:center;}
+body{
+  font-family:Arial,sans-serif;
+  margin:0;
+  padding:20px 15px 90px 15px;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  text-align:center;
+}
 .container{width:100%; max-width:500px;}
 .view{display:none;width:100%;animation:fadeIn 0.4s ease-in-out;}
 #home-view{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);}}
-.header{margin-bottom:25px;}
-.header h1{font-size:28px;font-weight:700;margin-bottom:5px;color:#fff;}
-.header p{color:#8a8a8a;font-size:14px;}
+
 .card{background:var(--card);padding:25px;border-radius:16px;margin-bottom:25px;box-shadow:0 8px 16px rgba(0,0,0,0.3);border:1px solid var(--border);}
 .card h2{margin:0 0 12px 0;font-size:16px;color:#8a8a8a;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
 .balance-amount{font-size:36px;font-weight:700;color:#fff;margin-bottom:10px;animation:balanceAnim 0.5s;}
@@ -55,42 +64,42 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 .date-time{margin-bottom:15px;font-size:14px;color:#00d4ff;font-weight:600;animation:pulseTime 1.5s infinite;}
 @keyframes pulseTime{0%{transform:scale(1);opacity:0.7;}50%{transform:scale(1.05);opacity:1;}100%{transform:scale(1);opacity:0.7;}}
 .signup-note {margin-top:15px;padding:10px 15px;background:#ff3b3f;color:#fff;font-weight:600;border-radius:12px;display:none;animation:pulse 1.5s infinite;}
+
+/* 🔥 আগুনের মতো হেডলাইন */
+.highlight-ads {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  margin: 15px 0;
+  color: #ff4b1f;
+  background: linear-gradient(90deg, #ff4b1f, #ff9068, #ff4b1f);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fireText 2s ease-in-out infinite, pulseFire 1.5s infinite;
+}
+@keyframes fireText {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes pulseFire {
+  0% { transform: scale(1); text-shadow: 0 0 3px #ff4b1f, 0 0 6px #ff9068; }
+  50% { transform: scale(1.05); text-shadow: 0 0 8px #ff4b1f, 0 0 15px #ff9068; }
+  100% { transform: scale(1); text-shadow: 0 0 3px #ff4b1f, 0 0 6px #ff9068; }
+}
 </style>
 </head>
 <body>
-  <!-- Headline (সবুজ, এনিমেশন সহ) -->
-<div class="headline-wrapper">
-  <div class="headline" id="signupHeadline">
-    Sign-up সঠিক নিয়মে করবেন, আপনার সঠিক কাজে সন্মান পাবেন।
-  </div>
-</div>
-
-<style>
-.headline-wrapper {
-  width: 100%;
-  overflow: hidden;
-  background: #121212; /* optional: ব্যাকগ্রাউন্ড কালার */
-  padding: 10px 0;
-}
-
-.headline {
-  display: inline-block;
-  white-space: nowrap;
-  color: #28a745; /* সবুজ কালার */
-  font-weight: 500;
-  font-size: 16px;
-  animation: scrollHeadline 15s linear infinite;
-}
-
-@keyframes scrollHeadline {
-  0% { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
-}
-</style>
 <div class="container">
   <div class="date-time" id="dateTimeDisplay"></div>
 
   <div id="home-view" class="view">
+    <!-- আগুনের মতো হেডলাইন -->
+    <div class="highlight-ads">
+      ৩-৫ টা Ad ক্লিক গ্রহণযোগ্য
+    </div>
+
     <div class="highlight-circle">সম্পূর্ণ AD না দেখলে আপনার কাজ সঠিক বলে গন্য হবে না।</div>
     <div class="header"><h1>Earning Platform</h1><p>Watch Ads & Earn USDT</p></div>
     <div class="card">
@@ -108,12 +117,9 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
       <div class="signup-note" id="signupNote">১৫ টি কাজ সম্পূর্ণ হয়েছে! এইবার Sign-up বাটনে ক্লিক করুন।</div>
     </div>
   </div>
-
-  <div id="referral-view" class="view">
-    <h1>Referral</h1>
-    <p>Share your referral link and earn rewards!</p>
-    <div id="referralLink" style="cursor:pointer;background:#111;padding:10px;border-radius:8px;word-break:break-word;">https://t.me/Monetag_alamin_bot</div>
-  </div>
+</div>
+</body>
+</html>
 
   <div id="withdraw-view" class="view">
     <h1>Withdraw</h1>
