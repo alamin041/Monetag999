@@ -58,6 +58,35 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
 </style>
 </head>
 <body>
+  <!-- Headline (সবুজ, এনিমেশন সহ) -->
+<div class="headline-wrapper">
+  <div class="headline" id="signupHeadline">
+    Sign-up সঠিক নিয়মে করবেন, আপনার সঠিক কাজে সন্মান পাবেন।
+  </div>
+</div>
+
+<style>
+.headline-wrapper {
+  width: 100%;
+  overflow: hidden;
+  background: #121212; /* optional: ব্যাকগ্রাউন্ড কালার */
+  padding: 10px 0;
+}
+
+.headline {
+  display: inline-block;
+  white-space: nowrap;
+  color: #28a745; /* সবুজ কালার */
+  font-weight: 500;
+  font-size: 16px;
+  animation: scrollHeadline 15s linear infinite;
+}
+
+@keyframes scrollHeadline {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+</style>
 <div class="container">
   <div class="date-time" id="dateTimeDisplay"></div>
 
