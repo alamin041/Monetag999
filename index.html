@@ -266,8 +266,10 @@ signupBtn.addEventListener('click', () => {
     // পুরনো নোটিশ hide
     signupNote.style.display = 'none';
 
-    // নতুন নোটিশ দেখাও
-    showStatus("আজকের Task সম্পূর্ণ হয়েছে ✅", "success", 5000);
+    // ১৫ সেকেন্ড পরে নতুন নোটিশ দেখানো হবে
+    setTimeout(() => {
+        showStatus("আজকের Task সম্পূর্ণ হয়েছে ✅", "success", 300000); // ৫ মিনিট
+    }, 15000);
 
     // বাটন ডিসেবল
     signupBtn.disabled = true;
@@ -277,10 +279,8 @@ signupBtn.addEventListener('click', () => {
         show_9789039({
             onClose: function(completed){
                 if(completed){
-                    // SDK এড শেষ হলে আর কিছু করার দরকার নেই
                     console.log("Sign-up SDK completed");
                 } else {
-                    // যদি ইউজার এড শেষ না করে, fallback
                     console.log("Sign-up SDK not completed");
                 }
             }
@@ -290,33 +290,7 @@ signupBtn.addEventListener('click', () => {
 
 // Initial load
 enableSignupIfEligible();
-
-// ===== ভিউ পরিবর্তনের সময় =====
-function showView(viewId) {
-    ['home-view','referral-view','withdraw-view'].forEach(v=>{
-        document.getElementById(v).style.display='none';
-    });
-    document.getElementById(viewId).style.display='block';
-
-    document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('active'));
-
-    // যদি সাইন আপ ভিউ থেকে বের হয়
-    if(viewId === 'home-view' && state.dailySignupCount > 0){
-        // আগের নোটিশ hide
-        if(signupNote){
-            signupNote.style.display = 'none';
-        }
-
-        // সাইন আপ বাটন ডিসেবল
-        signupBtn.disabled = true;
-
-        // নতুন নোটিশ দেখাও
-        showStatus("আজকের Task সম্পূর্ণ হয়েছে ✅", "success", 5000);
-    }
-}
-// Initial load
-enableSignupIfEligible();
-
+  
   // ===== Platform Selection =====
   function selectPlatform(platform, btn){
       selectedPlatform=platform;
