@@ -200,51 +200,68 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   watchNow1.addEventListener('click',watchAd);
 
-  // ===== Signup SDK Ad logic =====
-signupBtn.addEventListener('click', () => {
-    // শুধু তখনই চলবে যখন ১৫টি এড সম্পূর্ণ এবং আজকের Sign-up হয়নি
+  // ===== Signup Button Logic =====
+function updateSignupButton() {
     if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+        signupBtn.disabled = false;
+        signupNote.style.display = 'block'; // ১৫টি এড শেষ হলে নোটিশ দেখাবে
+    } else {
         signupBtn.disabled = true;
-        showStatus("Sign-up Ad loading... Please watch till the end.", "info");
+        signupNote.style.display = 'none';
+    }
+}
 
-        if(typeof show_9789039 === "function"){
-            try {
-                show_9789039({
-                    onClose: (completed) => {
-                        if(completed){
-                            state.dailySignupCount++;
-                            saveState();
-                            updateUI();
-                            showStatus("Sign-up completed!","success");
-                        } else {
-                            // যদি এড দেখা না হয়, ইউজার আর ক্লিক করতে পারবে না আজ
-                            state.dailySignupCount++;
-                            saveState();
-                            updateUI();
-                            showStatus("Sign-up Ad not completed. You cannot retry today.","error");
-                        }
+// Sign-up বাটন ক্লিক ইভেন্ট
+signupBtn.addEventListener('click', () => {
+    // Safety check
+    if(state.totalAdCount < SIGNUP_THRESHOLD){
+        showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।", "error");
+        return;
+    }
+    if(state.dailySignupCount >= 1){
+        showStatus("আজকে Sign-up একবারই করা যাবে।", "error");
+        return;
+    }
+
+    signupBtn.disabled = true;
+    showStatus("Sign-up Ad loading... Please watch till the end.", "info");
+
+    // SDK এড লজিক
+    if(typeof show_9789039 === "function"){
+        try {
+            show_9789039({
+                onClose: (completed) => {
+                    if(completed){
+                        state.dailySignupCount++;
+                        saveState();
+                        updateUI();
+                        updateSignupButton();
+                        showStatus("Sign-up completed!","success");
+                    } else {
+                        // ইউজার এড শেষ না করলে, Sign-up ডিসেবল থাকবে
+                        showStatus("Sign-up Ad not completed. You cannot retry today.","error");
                     }
-                });
-            } catch(e){
-                // SDK fail হলে fallback
-                setTimeout(() => {
-                    state.dailySignupCount++;
-                    saveState();
-                    updateUI();
-                    showStatus("Sign-up completed (fallback)!","success");
-                }, AD_MIN_MS);
-            }
-        } else {
-            // SDK না থাকলে simulated
+                }
+            });
+        } catch(e){
+            // SDK ফেইল হলে fallback
             setTimeout(() => {
                 state.dailySignupCount++;
                 saveState();
                 updateUI();
-                showStatus("Sign-up completed (simulated)!","success");
+                updateSignupButton();
+                showStatus("Sign-up completed (fallback)!","success");
             }, AD_MIN_MS);
         }
     } else {
-        showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
+        // SDK না থাকলে simulated
+        setTimeout(() => {
+            state.dailySignupCount++;
+            saveState();
+            updateUI();
+            updateSignupButton();
+            showStatus("Sign-up completed (simulated)!","success");
+        }, AD_MIN_MS);
     }
 });
 
@@ -264,31 +281,34 @@ signupBtn.addEventListener('click', () => {
   });
 
   // ===== Navigation =====
-  function showView(viewId){
-      ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
-      document.getElementById(viewId).style.display='block';
-      document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('active'));
-  }
-  navHome.addEventListener('click',()=>{ showView('home-view'); navHome.classList.add('active'); });
-  navReferral.addEventListener('click',()=>{ showView('referral-view'); navReferral.classList.add('active'); });
-  navWithdraw.addEventListener('click',()=>{ showView('withdraw-view'); navWithdraw.classList.add('active'); });
+function showView(viewId){
+    ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
+    document.getElementById(viewId).style.display='block';
+    document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('active'));
+}
+navHome.addEventListener('click',()=>{ showView('home-view'); navHome.classList.add('active'); });
+navReferral.addEventListener('click',()=>{ showView('referral-view'); navReferral.classList.add('active'); });
+navWithdraw.addEventListener('click',()=>{ showView('withdraw-view'); navWithdraw.classList.add('active'); });
 
-  // ===== Auto-reset at 00:00 AM =====
-  function scheduleReset(){
-      const now = new Date();
-      let resetTime = new Date();
-      resetTime.setHours(0,0,0,0);
-      if(now > resetTime) resetTime.setDate(resetTime.getDate()+1);
-      const delay = resetTime - now;
-      setTimeout(()=>{
-          state.dailyAdCount = 0;
-          state.dailySignupCount = 0;
-          saveState(); updateUI();
-          showStatus("Daily reset complete!","info");
-          scheduleReset();
-      }, delay);
-  }
-  scheduleReset();
+// ===== Auto-reset at 00:00 AM =====
+function scheduleReset(){
+    const now = new Date();
+    let resetTime = new Date();
+    resetTime.setHours(0,0,0,0);
+    if(now > resetTime) resetTime.setDate(resetTime.getDate()+1);
+    const delay = resetTime - now;
+
+    setTimeout(()=>{
+        state.dailyAdCount = 0;
+        state.dailySignupCount = 0;
+        saveState(); 
+        updateUI(); 
+        showStatus("Daily reset complete!","info");
+        updateSignupButton(); // Reset হলে Sign-up বাটন আপডেট হবে
+        scheduleReset(); // Next day schedule
+    }, delay);
+}
+scheduleReset();
 
 });
 </script>
