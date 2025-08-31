@@ -140,23 +140,12 @@ document.addEventListener('DOMContentLoaded', function(){
   let selectedPlatform = null;
   let adInProgress = false;
   let adCredited = false;
-  let adStartTs = 0;
 
   function getToday(){return new Date().toISOString().split('T')[0];}
-
   function saveState(){localStorage.setItem('earningState',JSON.stringify(state));}
-
   function loadState(){
-      try{
-          let s=JSON.parse(localStorage.getItem('earningState'));
-          if(s) state={...state,...s};
-      }catch{}
-      if(state.lastAdDate!==getToday()){
-          state.dailyAdCount=0;
-          state.dailySignupCount=0;
-          state.lastAdDate=getToday();
-          saveState();
-      }
+      try{ let s=JSON.parse(localStorage.getItem('earningState')); if(s) state={...state,...s}; }catch{}
+      if(state.lastAdDate!==getToday()){ state.dailyAdCount=0; state.dailySignupCount=0; state.lastAdDate=getToday(); saveState(); }
   }
 
   function showStatus(msg,type='info',dur=3000){
@@ -178,28 +167,19 @@ document.addEventListener('DOMContentLoaded', function(){
       });
 
       mainWithdrawBtn.disabled = (state.balanceInCents < WITHDRAW_THRESHOLD || !selectedPlatform);
-
       updateSignupButton();
-
-      if(state.dailyAdCount >= DAILY_LIMIT) watchNow1.disabled = true;
-      else watchNow1.disabled = false;
+      watchNow1.disabled = state.dailyAdCount >= DAILY_LIMIT || adInProgress;
   }
 
   function updateSignupButton(){
       if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-          signupBtn.disabled = false;
-          signupNote.style.display = 'block';
-      } else {
-          signupBtn.disabled = true;
-          signupNote.style.display = 'none';
-      }
+          signupBtn.disabled = false; signupNote.style.display = 'block';
+      } else { signupBtn.disabled = true; signupNote.style.display = 'none'; }
   }
 
   function generateReferral(){referralLink.textContent="https://t.me/Monetag_alamin_bot";}
-
   function updateDateTime(){const now=new Date(); dateTimeDisplay.textContent=`${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;}
   setInterval(updateDateTime,1000); updateDateTime();
-
   loadState(); updateUI(); generateReferral();
 
   // ===== Ad Logic =====
@@ -212,86 +192,52 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function watchAd(){
-      if(state.dailyAdCount >= DAILY_LIMIT){ 
-          showStatus("Daily ad limit reached","error"); 
-          watchNow1.disabled = true;
-          return;
-      }
+      if(state.dailyAdCount >= DAILY_LIMIT){ showStatus("Daily ad limit reached","error"); return;}
       if(adInProgress) return;
-      adInProgress = true; adCredited=false; adStartTs=Date.now(); watchNow1.disabled=true;
+      adInProgress = true; adCredited=false; watchNow1.disabled=true;
       showStatus("Ad loading... Please watch till the end.","info");
 
       if(typeof show_9789039 === "function"){
-          try{ 
+          try{
               show_9789039({onClose:(completed)=>{
                   adInProgress = false;
-                  if(completed) creditAdOnce(); 
-                  if(state.dailyAdCount >= DAILY_LIMIT) watchNow1.disabled=true;
-                  else watchNow1.disabled=false;
-              }}); 
+                  if(completed) creditAdOnce();
+                  updateUI();
+              }});
           }catch{}
       }
 
-      setTimeout(() => {
+      setTimeout(()=>{
           creditAdOnce();
-          if(state.dailyAdCount >= DAILY_LIMIT) watchNow1.disabled=true;
-          else watchNow1.disabled=false;
-      }, AD_MIN_MS); 
+          updateUI();
+      }, AD_MIN_MS);
   }
   watchNow1.addEventListener('click',watchAd);
 
-  // ===== Signup Logic =====
-  signupBtn.addEventListener('click', () => {
-      if(state.totalAdCount < SIGNUP_THRESHOLD){
-          showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।", "error");
-          return;
-      }
-      if(state.dailySignupCount >= 1){
-          showStatus("আজকে Sign-up একবারই করা যাবে।", "error");
-          return;
-      }
+  // ===== Sign-up Logic =====
+  signupBtn.addEventListener('click',()=>{
+      if(state.totalAdCount < SIGNUP_THRESHOLD){ showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।", "error"); return; }
+      if(state.dailySignupCount >=1){ showStatus("আজকে Sign-up একবারই করা যাবে।", "error"); return; }
 
-      signupBtn.disabled = true;
+      signupBtn.disabled = true; adInProgress=true; adCredited=false;
       showStatus("Sign-up Ad loading... Please watch till the end.", "info");
 
-      adInProgress = true; 
-      adCredited = false; 
-      adStartTs = Date.now();
-
       if(typeof show_9789039 === "function"){
-          try {
-              show_9789039({
-                  onClose: (completed) => {
-                      adInProgress = false;
-                      if(completed){
-                          state.dailySignupCount++;
-                          saveState();
-                          updateUI();
-                          updateSignupButton();
-                          showStatus("Sign-up completed!","success");
-                      } else {
-                          showStatus("Sign-up Ad not completed. You cannot retry today.","error");
-                          updateSignupButton();
-                      }
-                  }
-              });
-          } catch(e){
-              setTimeout(() => {
-                  state.dailySignupCount++;
-                  adInProgress = false;
-                  saveState();
-                  updateUI();
-                  updateSignupButton();
+          try{
+              show_9789039({onClose:(completed)=>{
+                  adInProgress=false;
+                  if(completed){ state.dailySignupCount++; saveState(); showStatus("Sign-up completed!","success"); updateUI(); updateSignupButton();}
+                  else{ showStatus("Sign-up Ad not completed. You cannot retry today.","error"); updateSignupButton();}
+              }});
+          }catch(e){
+              setTimeout(()=>{
+                  state.dailySignupCount++; adInProgress=false; saveState(); updateUI(); updateSignupButton();
                   showStatus("Sign-up completed (fallback)!","success");
               }, AD_MIN_MS);
           }
-      } else {
-          setTimeout(() => {
-              state.dailySignupCount++;
-              adInProgress = false;
-              saveState();
-              updateUI();
-              updateSignupButton();
+      }else{
+          setTimeout(()=>{
+              state.dailySignupCount++; adInProgress=false; saveState(); updateUI(); updateSignupButton();
               showStatus("Sign-up completed (simulated)!","success");
           }, AD_MIN_MS);
       }
@@ -299,10 +245,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // ===== Platform Selection =====
   function selectPlatform(platform, btn){
-      selectedPlatform=platform; 
-      [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected')); 
-      btn.classList.add('selected'); 
-      updateUI();
+      selectedPlatform=platform;
+      [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected'); updateUI();
   }
   binanceBtn.addEventListener('click',()=>selectPlatform('Binance',binanceBtn));
   bybitBtn.addEventListener('click',()=>selectPlatform('Bybit',bybitBtn));
@@ -310,40 +255,54 @@ document.addEventListener('DOMContentLoaded', function(){
   uwolnBtn.addEventListener('click',()=>selectPlatform('Uwoln',uwolnBtn));
 
   // ===== Withdraw =====
-  mainWithdrawBtn.addEventListener('click',()=>{
-      if(!selectedPlatform){showStatus("Please select a platform","error"); return;}
-      if(state.balanceInCents<WITHDRAW_THRESHOLD){showStatus("Insufficient balance","error"); return;}
-      state.balanceInCents=0; saveState(); updateUI();
-      showStatus(`Withdrawal request sent to ${selectedPlatform}!`,"success");
-  });
+mainWithdrawBtn.addEventListener('click', () => {
+    if (!selectedPlatform) {
+        showStatus("Please select a platform", "error");
+        return;
+    }
+    if (state.balanceInCents < WITHDRAW_THRESHOLD) {
+        showStatus("Insufficient balance", "error");
+        return;
+    }
 
-  // ===== Navigation =====
-  function showView(viewId){
-      ['home-view','referral-view','withdraw-view'].forEach(v=>document.getElementById(v).style.display='none');
-      document.getElementById(viewId).style.display='block';
-      document.querySelectorAll('.nav-btn').forEach(btn=>btn.classList.remove('active'));
-  }
-  navHome.addEventListener('click',()=>{ showView('home-view'); navHome.classList.add('active'); });
-  navReferral.addEventListener('click',()=>{ showView('referral-view'); navReferral.classList.add('active'); });
-  navWithdraw.addEventListener('click',()=>{ showView('withdraw-view'); navWithdraw.classList.add('active'); });
+    // Reset balance after withdrawal
+    state.balanceInCents = 0;
+    saveState();
+    updateUI();
+    showStatus(`Withdrawal request sent to ${selectedPlatform}!`, "success");
+});
 
-  // ===== Auto-reset at 00:00 AM =====
-  function scheduleReset(){
-      const now = new Date();
-      let resetTime = new Date();
-      resetTime.setHours(0,0,0,0);
-      if(now > resetTime) resetTime.setDate(resetTime.getDate()+1);
-      const delay = resetTime - now;
-      setTimeout(()=>{
-          state.dailyAdCount = 0;
-          state.dailySignupCount = 0;
-          saveState(); 
-          updateUI();
-          showStatus("Daily reset complete!","info");
-          scheduleReset();
-      }, delay);
-  }
-  scheduleReset();
+// ===== Navigation =====
+function showView(viewId) {
+    ['home-view', 'referral-view', 'withdraw-view'].forEach(v => {
+        document.getElementById(v).style.display = 'none';
+    });
+    document.getElementById(viewId).style.display = 'block';
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+}
+
+navHome.addEventListener('click', () => { showView('home-view'); navHome.classList.add('active'); });
+navReferral.addEventListener('click', () => { showView('referral-view'); navReferral.classList.add('active'); });
+navWithdraw.addEventListener('click', () => { showView('withdraw-view'); navWithdraw.classList.add('active'); });
+
+// ===== Auto-reset at 00:00 AM =====
+function scheduleReset() {
+    const now = new Date();
+    let resetTime = new Date();
+    resetTime.setHours(0, 0, 0, 0);
+    if (now > resetTime) resetTime.setDate(resetTime.getDate() + 1);
+    const delay = resetTime - now;
+
+    setTimeout(() => {
+        state.dailyAdCount = 0;
+        state.dailySignupCount = 0;
+        saveState();
+        updateUI();
+        showStatus("Daily reset complete!", "info");
+        scheduleReset();
+    }, delay);
+}
+scheduleReset();
 });
 </script>
 </body>
