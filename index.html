@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Earning Platform</title>
-<script src='//libtl.com/sdk.js' data-zone='9789039' data-sdk='show_9789039'></script>
+
+<script src="//libtl.com/sdk.js" data-zone="9789039" data-sdk="show_9789039"></script>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
 :root{
   --bg:#121212; --text:#e0e0e0; --btn:#007bff; --btnText:#fff;
@@ -75,30 +77,31 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
       <button class="btn" id="watchNow1">Watch Now</button>
       <button class="btn" id="signupBtn" disabled>Sign-up</button>
       <div class="signup-note" id="signupNote">১৫ টি কাজ সম্পূর্ণ হয়েছে! Sign-up করতে নিচের বাটনে ক্লিক করুন।</div>
+    </div>
   </div>
-</div>
 
-<div id="referral-view" class="view">
-  <h1>Referral</h1>
-  <p>Share your referral link and earn rewards!</p>
-  <div id="referralLink" style="cursor:pointer;background:#111;padding:10px;border-radius:8px;word-break:break-word;">https://t.me/Monetag_alamin_bot</div>
-</div>
-
-<div id="withdraw-view" class="view">
-  <h1>Withdraw</h1>
-  <p>Choose account to withdraw (Min 20 USD):</p>
-  <div class="payment-icons">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Binance_Logo.png" alt="Binance" id="binanceBtn">
-    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5d/Bybit_logo.png" alt="Bybit" id="bybitBtn">
-    <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal" id="paypalBtn">
-    <img src="UWOLN_LOGO_URL_HERE" alt="Uwoln" id="uwolnBtn">
+  <div id="referral-view" class="view">
+    <h1>Referral</h1>
+    <p>Share your referral link and earn rewards!</p>
+    <div id="referralLink" style="cursor:pointer;background:#111;padding:10px;border-radius:8px;word-break:break-word;">https://t.me/Monetag_alamin_bot</div>
   </div>
-  <div class="ad-buttons">
-    <button class="btn" id="mainWithdrawBtn" disabled>Withdraw</button>
-  </div>
-</div>
 
-<div class="status-message" id="statusMessage"></div>
+  <div id="withdraw-view" class="view">
+    <h1>Withdraw</h1>
+    <p>Choose account to withdraw (Min 20 USD):</p>
+    <div class="payment-icons">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Binance_Logo.png" alt="Binance" id="binanceBtn">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/5/5d/Bybit_logo.png" alt="Bybit" id="bybitBtn">
+      <img src="https://www.paypalobjects.com/webstatic/icon/pp258.png" alt="PayPal" id="paypalBtn">
+      <img src="UWOLN_LOGO_URL_HERE" alt="Uwoln" id="uwolnBtn">
+    </div>
+    <div class="ad-buttons">
+      <button class="btn" id="mainWithdrawBtn" disabled>Withdraw</button>
+    </div>
+  </div>
+
+  <div class="status-message" id="statusMessage"></div>
+</div>
 
 <footer class="footer-nav">
   <button class="nav-btn active" id="navHome"><span class="icon">🏠</span><span>Home</span></button>
@@ -205,48 +208,42 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   watchNow1.addEventListener('click',watchAd);
 
-// ===== Signup SDK Ad logic =====
-signupBtn.addEventListener('click', () => {
-    // ১৫ টি Ad দেখা হয়েছে এবং আজকের Sign-up করা হয়নি
-    if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
-        signupBtn.disabled = true; // Prevent multiple clicks
-        showStatus("Sign-up Ad loading... Please watch till the end.", "info");
+  // ===== Signup SDK Ad logic =====
+  signupBtn.addEventListener('click', () => {
+      if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+          signupBtn.disabled = true;
+          showStatus("Sign-up Ad loading... Please watch till the end.","info");
+          if(typeof show_9789039 === "function"){
+              try{
+                  show_9789039({ onClose: (completed) => {
+                      if(completed){
+                          state.dailySignupCount++;
+                          saveState(); updateUI();
+                          showStatus("Sign-up completed!","success");
+                      } else {
+                          signupBtn.disabled = false;
+                          showStatus("Sign-up Ad not completed. Try again.","error");
+                      }
+                  }});
+              } catch(e){
+                  setTimeout(() => {
+                      state.dailySignupCount++;
+                      saveState(); updateUI();
+                      showStatus("Sign-up completed (fallback)!","success");
+                  }, AD_MIN_MS);
+              }
+          } else {
+              setTimeout(() => {
+                  state.dailySignupCount++;
+                  saveState(); updateUI();
+                  showStatus("Sign-up completed (simulated)!","success");
+              }, AD_MIN_MS);
+          }
+      } else {
+          showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
+      }
+  });
 
-        if(typeof show_9789039 === "function"){
-            try {
-                show_9789039({
-                    onClose: (completed) => {
-                        if(completed){
-                            // একবার Sign-up কাউন্ট হবে
-                            state.dailySignupCount++;
-                            saveState(); updateUI();
-                            showStatus("Sign-up completed!","success");
-                        } else {
-                            // ইউজার এড শেষ না করলে, Sign-up আর ক্লিক করা যাবে না (একবারের জন্য)
-                            showStatus("Sign-up Ad not completed. You cannot retry today.","error");
-                        }
-                    }
-                });
-            } catch(e){
-                // SDK ফেইল হলে fallback
-                setTimeout(() => {
-                    state.dailySignupCount++;
-                    saveState(); updateUI();
-                    showStatus("Sign-up completed (fallback)!","success");
-                }, AD_MIN_MS);
-            }
-        } else {
-            // SDK না থাকলে simulated
-            setTimeout(() => {
-                state.dailySignupCount++;
-                saveState(); updateUI();
-                showStatus("Sign-up completed (simulated)!","success");
-            }, AD_MIN_MS);
-        }
-    } else {
-        showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।","error");
-    }
-});
   // ===== Platform select =====
   function selectPlatform(platform, btn){ selectedPlatform=platform; [binanceBtn,bybitBtn,paypalBtn,uwolnBtn].forEach(b=>b.classList.remove('selected')); btn.classList.add('selected'); updateUI();}
   binanceBtn.addEventListener('click',()=>selectPlatform('Binance',binanceBtn));
@@ -271,7 +268,7 @@ signupBtn.addEventListener('click', () => {
   navHome.addEventListener('click',()=>{ showView('home-view'); navHome.classList.add('active'); });
   navReferral.addEventListener('click',()=>{ showView('referral-view'); navReferral.classList.add('active'); });
   navWithdraw.addEventListener('click',()=>{ showView('withdraw-view'); navWithdraw.classList.add('active'); });
-
+});
   // ===== Auto-reset at 00:00 AM =====
   function scheduleReset(){
       const now = new Date();
