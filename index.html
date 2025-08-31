@@ -76,7 +76,7 @@ body{font-family:Arial,sans-serif;margin:0;padding:20px 15px 90px 15px;backgroun
     <div class="ad-buttons">
       <button class="btn" id="watchNow1">Watch Now</button>
       <button class="btn" id="signupBtn" disabled>Sign-up</button>
-      <div class="signup-note" id="signupNote">১৫ টি কাজ সম্পূর্ণ হয়েছে! Sign-up করতে নিচের বাটনে ক্লিক করুন।</div>
+      <div class="signup-note" id="signupNote">১৫ টি কাজ সম্পূর্ণ হয়েছে! এইবার Sign-up বাটনে ক্লিক করুন।</div>
     </div>
   </div>
 
@@ -214,34 +214,53 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   watchNow1.addEventListener('click',watchAd);
 
-  // ===== Sign-up Logic =====
-  signupBtn.addEventListener('click',()=>{
-      if(state.totalAdCount < SIGNUP_THRESHOLD){ showStatus("প্রথমে ১৫টি Ad সম্পূর্ণ করুন।", "error"); return; }
-      if(state.dailySignupCount >=1){ showStatus("আজকে Sign-up একবারই করা যাবে।", "error"); return; }
+// ===== Sign-up Logic =====
+function enableSignupIfEligible(){
+    if(state.totalAdCount >= SIGNUP_THRESHOLD && state.dailySignupCount < 1){
+        signupBtn.disabled = false;
+        signupNote.style.display = 'block';
+    } else {
+        signupBtn.disabled = true;
+        signupNote.style.display = 'none';
+    }
+}
 
-      signupBtn.disabled = true; adInProgress=true; adCredited=false;
-      showStatus("Sign-up Ad loading... Please watch till the end.", "info");
+signupBtn.addEventListener('click', () => {
+    if(signupBtn.disabled) return; // Safety check
 
-      if(typeof show_9789039 === "function"){
-          try{
-              show_9789039({onClose:(completed)=>{
-                  adInProgress=false;
-                  if(completed){ state.dailySignupCount++; saveState(); showStatus("Sign-up completed!","success"); updateUI(); updateSignupButton();}
-                  else{ showStatus("Sign-up Ad not completed. You cannot retry today.","error"); updateSignupButton();}
-              }});
-          }catch(e){
-              setTimeout(()=>{
-                  state.dailySignupCount++; adInProgress=false; saveState(); updateUI(); updateSignupButton();
-                  showStatus("Sign-up completed (fallback)!","success");
-              }, AD_MIN_MS);
-          }
-      }else{
-          setTimeout(()=>{
-              state.dailySignupCount++; adInProgress=false; saveState(); updateUI(); updateSignupButton();
-              showStatus("Sign-up completed (simulated)!","success");
-          }, AD_MIN_MS);
-      }
-  });
+    // ✅ ক্লিক সাথে সাথে কাউন্ট বৃদ্ধি
+    state.dailySignupCount++;
+    saveState();
+    updateUI();
+    enableSignupIfEligible();
+
+    // পুরনো নোটিশ hide
+    signupNote.style.display = 'none';
+
+    // নতুন নোটিশ দেখাও
+    showStatus("আজকের Task সম্পূর্ণ হয়েছে ✅", "success", 5000);
+
+    // বাটন ডিসেবল
+    signupBtn.disabled = true;
+
+    // 🔹 SDK এড রান হবে
+    if(typeof show_9789039 === "function"){
+        show_9789039({
+            onClose: function(completed){
+                if(completed){
+                    // SDK এড শেষ হলে আর কিছু করার দরকার নেই
+                    console.log("Sign-up SDK completed");
+                } else {
+                    // যদি ইউজার এড শেষ না করে, fallback
+                    console.log("Sign-up SDK not completed");
+                }
+            }
+        });
+    }
+});
+
+// Initial load
+enableSignupIfEligible();
 
   // ===== Platform Selection =====
   function selectPlatform(platform, btn){
